@@ -1,0 +1,73 @@
+Multilingual Family Roadmap 利用許諾条件
+==========================================
+
+Copyright (c) 2026 shouken. All rights reserved.
+(本ソフトウェアおよび付随するドキュメント・データ・デザインを含む。以下「本ソフトウェア」)
+
+本ソフトウェアは、オープンソースライセンスでは提供されていません。
+ソースコードは閲覧可能な形で公開されていますが、著作権はすべて著作権者に留保されます。
+
+第1条(許可される行為)
+以下の行為に限り、無償で許可します。
+  1. 本リポジトリ上でソースコードを閲覧すること。
+  2. GitHub の機能の範囲内でスター・ウォッチ・フォークを行うこと
+     (フォークは GitHub 上での保持のみを許可し、第2条の禁止行為は
+     フォークに対しても同様に適用されます)。
+  3. 個人的な学習・評価を目的として、私的利用の範囲内で
+     本ソフトウェアをローカル環境で実行すること。
+
+第2条(禁止される行為)
+著作権者の書面による事前の許諾なく、以下の行為を禁止します。
+  1. 無断転載:本ソフトウェアの全部または一部を、他のリポジトリ、
+     ウェブサイト、書籍、記事、アプリケーションその他の媒体へ
+     複製・転載・再配布・再公開すること。
+  2. 商用利用:本ソフトウェアの全部または一部を、直接・間接を問わず、
+     営利を目的として利用すること(有償サービスへの組み込み、
+     広告収入を伴うサイトでの提供、受託開発での流用、
+     販売・サブライセンスを含むがこれらに限らない)。
+  3. 本ソフトウェアを改変したものを頒布・公開すること。
+  4. 著作権表示・本利用許諾条件の表示を削除または改変すること。
+
+第3条(違反時の措置)
+  1. 本条件のいずれかに違反した場合、本利用許諾は何らの通知なく
+     直ちに終了し、違反者は本ソフトウェアの利用・複製物の保持を
+     継続することができません。
+  2. 著作権者は、違反者に対し、利用の差止め、複製物の廃棄、
+     および著作権法その他の法令に基づく損害賠償
+     (違反による利益の返還・逸失利益・弁護士費用を含む)を
+     請求できるものとします。
+
+第4条(無保証・免責)
+本ソフトウェアは現状有姿で提供され、明示・黙示を問わず、
+商品性・特定目的適合性・非侵害性を含むいかなる保証も行いません。
+本ソフトウェアの利用に起因して生じたいかなる損害についても、
+著作権者は責任を負いません。
+
+第5条(準拠法・管轄)
+本条件は日本法に準拠し、本条件に関する紛争については、
+著作権者の住所地を管轄する裁判所を第一審の専属的合意管轄裁判所とします。
+
+第6条(お問い合わせ)
+商用利用・転載等の許諾を希望する場合は、リポジトリ記載の
+連絡先まで事前にお問い合わせください。
+
+------------------------------------------------------------------
+
+NOTICE (English summary — the Japanese text above is the binding version)
+
+This software is source-available, NOT open source.
+All rights reserved by the copyright holder.
+
+You MAY: view the source code on this repository, star/watch/fork it
+within GitHub, and run it locally for personal, non-commercial
+learning or evaluation purposes only.
+
+You MAY NOT, without prior written permission: reproduce, repost,
+redistribute, or republish this software in whole or in part;
+use it for any commercial purpose; or distribute modified versions.
+
+Any violation immediately terminates this license. The copyright
+holder reserves the right to seek injunctive relief and damages
+(including lost profits and attorney's fees) under applicable law.
+This software is provided "AS IS" without warranty of any kind.
+Governed by the laws of Japan.
