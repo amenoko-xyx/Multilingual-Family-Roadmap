@@ -1,4 +1,4 @@
-import type { Lang, MaterialStatusValue, MaterialType, Skill } from './types'
+import type { Lang, MaterialStatusValue, MaterialType, Role, Skill } from './types'
 import type { Status } from './lib/logic'
 
 /**
@@ -14,7 +14,7 @@ const ja = {
     roadmap: 'ロードマップ',
     gap: 'ギャップ分析',
     plan: 'プラン',
-    compare: 'きょうだい比較',
+    compare: '家族バランス',
     settings: '設定',
   },
   /** 正式名称(設定画面などで使用) */
@@ -22,7 +22,7 @@ const ja = {
     ja: '日本語',
     en: '英語',
     zh: '中国語(標準語)',
-    yue: '中国語(広東語)',
+    ko: '韓国語',
     pt: 'ポルトガル語',
     es: 'スペイン語',
   } as Record<Lang, string>,
@@ -31,12 +31,13 @@ const ja = {
     ja: '日本語',
     en: '英語',
     zh: '中国語',
-    yue: '広東語',
+    ko: '韓国語',
     pt: '葡語',
     es: '西語',
   } as Record<Lang, string>,
   skill: { listening: '聞く', speaking: '話す', reading: '読む', writing: '書く' } as Record<Skill, string>,
   status: {
+    achieved: '達成',
     ahead: '先行',
     onTrack: '順調',
     slightBehind: 'やや遅れ',
@@ -56,8 +57,8 @@ const ja = {
     completed: '修了',
     deferred: '後回し',
   } as Record<MaterialStatusValue, string>,
-  langOrder: ['第一言語', '第二言語', '第三言語'],
-  compareNote: '比較は優劣をつけるためではなく、それぞれの子に合った打ち手を見つけるためのものです。ペースの違いは個性です。',
+  role: { native: '母語', foreign1: '第一外国語', foreign2: '第二外国語' } as Record<Role, string>,
+  compareNote: '比較は優劣をつけるためではなく、それぞれのメンバーに合った打ち手を見つけるためのものです。ペースの違いは個性です。',
 }
 
 const dictionaries = { ja }

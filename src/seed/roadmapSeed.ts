@@ -468,31 +468,31 @@ interface DerivedDef {
   rules: Rule[]
 }
 
-const DERIVED: Record<'yue' | 'pt' | 'es', DerivedDef> = {
-  yue: {
+const DERIVED: Record<'ko' | 'pt' | 'es', DerivedDef> = {
+  ko: {
     base: 'zh',
+    // 外国語トラックのベンチマーク(docs/level-design.md 韓国語表)。native も暫定でこの値を流用する
     benchmarks: [
-      '広東語音声への親しみ(検定なし)',
-      '入門準備(語彙あそび)',
-      '入門(粤拼と基本漢字)',
-      '初級(日常会話の聞き取り)',
-      '中級(実用場面の会話)',
-      '中上級(意見を述べられる)',
+      'ハングルが読める・あいさつ',
+      'TOPIK I 1級・ハングル検定5級',
+      'TOPIK I 2級・ハングル検定4級',
+      'TOPIK II 3級・ハングル検定3級',
+      'TOPIK II 4〜5級・ハングル検定準2級',
+      'TOPIK II 6級・ハングル検定2級以上',
     ],
-    source: '広東語には広く使われる公的検定が少ないため、標準語テンプレート(YCT/HSK基準)をレベル感の目安として翻案した下書きです。',
+    source: '中国語(標準語)テンプレートを韓国語向けに置換ルールで翻案した暫定下書きです。検定名は目安で、家庭の実情に合わせて編集してください。',
+    // 置換は順番に適用される。長い/特殊なキーを先に置く(HSK1〜2級 を HSK1級 より先に処理)
     rules: [
-      ['YCT1級の筆記問題で6割正解する', '粤拼付きの単語カード50枚を読める'],
-      ['YCT1級レベルの単語・短文を聞いて理解できる', '入門レベルの単語・短文を聞いて理解できる'],
-      ['HSK1級リスニングで6割正解する', '初級教材のリスニング問題で6割正解する'],
-      ['HSK1〜2級の単語300語を読める', '基礎単語300語を読める'],
-      ['HSK3級リスニングで6割正解する', '中級教材のリスニング問題で6割正解する'],
-      ['HSK3級の読解問題で6割正解する', '中級レベルの短文読解で6割正解する'],
-      ['HSK4級リスニングで6割正解する', '中上級教材のリスニング問題で6割正解する'],
-      ['HSK4級の読解問題で6割正解する', '中上級レベルの読解問題で6割正解する'],
-      ['HSK4級の作文形式(並べ替え・写真作文)に対応できる', '80字程度の作文課題に対応できる'],
-      ['拼音', '粤拼(Jyutping)'],
-      ['簡体字', '繁体字'],
-      ['中国語', '広東語'],
+      ['声調記号付きで', ''],
+      ['(声調記号付き)', ''],
+      ['YCT1級', 'TOPIK I 1級相当'],
+      ['HSK1〜2級', 'TOPIK I 1〜2級'],
+      ['HSK1級', 'TOPIK I 1級'],
+      ['HSK3級', 'TOPIK I 2級'],
+      ['HSK4級', 'TOPIK II 3級'],
+      ['拼音', 'ハングル'],
+      ['簡体字', 'ハングル'],
+      ['中国語', '韓国語'],
     ],
   },
   pt: {
@@ -561,7 +561,7 @@ DERIVED.es.rules = DERIVED.pt.rules.map(
   ([from, to]) => [from, to.replace('ポルトガル語', 'スペイン語')] as Rule,
 )
 
-function transformCell(cell: SeedCell, def: DerivedDef, band: number): SeedCell {
+function transformCell(cell: SeedCell, def: DerivedDef, idx: number): SeedCell {
   const tx = (s: string) => applyRules(s, def.rules)
   const skills: SeedCell['skills'] = {}
   ;(Object.keys(cell.skills) as Skill[]).forEach((skill) => {
@@ -569,7 +569,7 @@ function transformCell(cell: SeedCell, def: DerivedDef, band: number): SeedCell 
     skills[skill] = { summary: tx(s.summary), items: s.items.map(tx) }
   })
   return {
-    benchmark: def.benchmarks[band],
+    benchmark: def.benchmarks[idx],
     tip: tx(cell.tip),
     source: def.source,
     skills,
@@ -579,8 +579,8 @@ function transformCell(cell: SeedCell, def: DerivedDef, band: number): SeedCell 
 /** 言語ごとのテンプレートを返す(手書き or 翻案) */
 export function seedCellsFor(lang: Lang): SeedCell[] {
   if (lang === 'ja' || lang === 'en' || lang === 'zh') return BASE_SEED[lang]
-  const def = DERIVED[lang]
-  return BASE_SEED[def.base].map((cell, band) => transformCell(cell, def, band))
+  const def = DERIVED[lang as 'ko' | 'pt' | 'es']
+  return BASE_SEED[def.base].map((cell, idx) => transformCell(cell, def, idx))
 }
 
 const SKILL_CODE: Record<Skill, string> = {
@@ -590,22 +590,23 @@ const SKILL_CODE: Record<Skill, string> = {
   writing: 'w',
 }
 
-export const SEEDABLE_LANGS: Lang[] = ['ja', 'en', 'zh', 'yue', 'pt', 'es']
+export const SEEDABLE_LANGS: Lang[] = ['ja', 'en', 'zh', 'ko', 'pt', 'es']
 
-/** 1言語分のシード(セル+Can-Do項目)を生成 */
+/** 1言語分のシード(セル+Can-Do項目)を生成。テンプレートの0-based indexを段階(stage 1〜6)へ変換する */
 export function buildLangSeed(lang: Lang): { cells: Cell[]; items: CanDoItem[] } {
   const cells: Cell[] = []
   const items: CanDoItem[] = []
-  seedCellsFor(lang).forEach((cell, band) => {
+  seedCellsFor(lang).forEach((cell, idx) => {
+    const stage = idx + 1
     const summaries: Partial<Record<Skill, string>> = {}
     ;(Object.keys(cell.skills) as Skill[]).forEach((skill) => {
       const s = cell.skills[skill]!
       summaries[skill] = s.summary
       s.items.forEach((text, i) => {
         items.push({
-          id: `${lang}-${band}-${SKILL_CODE[skill]}-${i + 1}`,
+          id: `${lang}-${stage}-${SKILL_CODE[skill]}-${i + 1}`,
           lang,
-          band,
+          stage,
           skill,
           text,
           order: i,
@@ -613,10 +614,11 @@ export function buildLangSeed(lang: Lang): { cells: Cell[]; items: CanDoItem[] }
       })
     })
     cells.push({
-      id: `${lang}-${band}`,
+      id: `${lang}-${stage}`,
       lang,
-      band,
-      benchmark: cell.benchmark,
+      stage,
+      // 暫定: 外国語トラック/母語トラックとも旧benchmarkを流用(役割別の作り込みは別Issue)
+      benchmarks: { foreign: cell.benchmark, native: cell.benchmark },
       tip: cell.tip,
       source: cell.source,
       summaries,

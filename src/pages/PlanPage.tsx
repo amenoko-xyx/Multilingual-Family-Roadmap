@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { db } from '../db'
 import { useApp } from '../context/AppContext'
 import type { CheckRecord, Lang, MaterialStatus, MaterialStatusValue, Skill } from '../types'
-import { ageAt, todayStr } from '../lib/dates'
+import { todayStr } from '../lib/dates'
 import { allSkillGaps, generatePlan } from '../lib/logic'
 import { Card, EmptyState, LangChip, SectionTitle, SkillLabel, StatusBadge } from '../components/ui'
 import { CheckRow } from '../components/CheckRow'
@@ -28,24 +28,24 @@ const STATUS_ORDER: Record<MaterialStatusValue, number> = {
 
 /**
  * F4: キャッチアッププラン。
- * 未チェックのCan-Do項目をタスク化し、年齢帯順のステップ+教材+週あたり時間を提示。
+ * 未チェックのCan-Do項目をタスク化し、段階順のステップ+教材+週あたり時間を提示。
  * プラン上のチェックは即座に記録・ギャップ分析へ反映される(プラン=記録画面の一形態)。
  */
 export default function PlanPage() {
-  const { selectedChild, langs, paces } = useApp()
+  const { selectedMember, memberLanguages } = useApp()
   const items = useLiveQuery(() => db.items.toArray(), [], undefined)
   const materials = useLiveQuery(() => db.materials.toArray(), [], undefined)
   const checks = useLiveQuery(
-    () => (selectedChild ? db.checks.where('childId').equals(selectedChild.id).toArray() : Promise.resolve([] as CheckRecord[])),
-    [selectedChild?.id],
+    () => (selectedMember ? db.checks.where('memberId').equals(selectedMember.id).toArray() : Promise.resolve([] as CheckRecord[])),
+    [selectedMember?.id],
     undefined,
   )
   const materialStatuses = useLiveQuery(
     () =>
-      selectedChild
-        ? db.materialStatus.where('childId').equals(selectedChild.id).toArray()
+      selectedMember
+        ? db.materialStatus.where('memberId').equals(selectedMember.id).toArray()
         : Promise.resolve([] as MaterialStatus[]),
-    [selectedChild?.id],
+    [selectedMember?.id],
     [],
   )
   const [selected, setSelected] = useState<{ lang: Lang; skill: Skill } | null>(null)
@@ -56,19 +56,20 @@ export default function PlanPage() {
     (materialStatuses ?? []).find((s) => s.materialId === materialId)?.status ?? 'notStarted'
 
   if (items === undefined || checks === undefined || materials === undefined) return null
-  if (!selectedChild) {
+  if (!selectedMember) {
     return (
-      <EmptyState icon="route" title="お子さんが未登録です">
-        <Link to="/onboarding" className="font-medium text-brand-600">お子さんを登録</Link>するとプランを作成できます。
+      <EmptyState icon="route" title="メンバーが未登録です">
+        <Link to="/onboarding" className="font-medium text-brand-600">メンバーを登録</Link>するとプランを作成できます。
       </EmptyState>
     )
   }
 
-  const age = ageAt(selectedChild.birthDate, todayStr())
+  const today = todayStr()
   const checkedIds = new Set(checks.map((c) => c.itemId))
-  const gaps = allSkillGaps(items, checkedIds, age, langs, paces)
-  const lagging = gaps.filter((g) => g.attainment.status === 'attention' || g.attainment.status === 'slightBehind')
-  const candidates = lagging.length > 0 ? lagging : gaps.filter((g) => g.attainment.status === 'unrecorded')
+  const gaps = allSkillGaps(items, checks, selectedMember, today)
+  // 達成済みの技能はプラン対象から除外する
+  const lagging = gaps.filter((g) => g.status === 'attention' || g.status === 'slightBehind')
+  const candidates = lagging.length > 0 ? lagging : gaps.filter((g) => g.status === 'unrecorded')
 
   // 表示中のプランはチェックによる再計算で勝手に切り替えない(明示的に選ぶまで固定)
   const active =
@@ -89,13 +90,15 @@ export default function PlanPage() {
     )
   }
 
+  const targetStage = memberLanguages.find((ml) => ml.lang === active.lang)?.targetStage ?? 6
   const plan = generatePlan(
     active.lang,
     active.skill,
     items.filter((i) => i.lang === active.lang && i.skill === active.skill),
     checkedIds,
-    age,
+    targetStage,
     materials,
+    selectedMember.kind,
     months,
   )
 
@@ -104,7 +107,7 @@ export default function PlanPage() {
       <div>
         <h1 className="text-xl font-bold text-neutral-900">キャッチアッププラン</h1>
         <p className="mt-1 text-sm text-neutral-500">
-          {selectedChild.name}さんの遅れている技能について、未達成のCan-Do項目をステップに分けて提案します。ここでチェックすると記録に即反映されます。
+          {selectedMember.name}さんの遅れている技能について、未達成のCan-Do項目をステップに分けて提案します。ここでチェックすると記録に即反映されます。
         </p>
       </div>
 
@@ -124,7 +127,7 @@ export default function PlanPage() {
               >
                 <SkillLabel skill={g.skill} />
                 <LangChip lang={g.lang} />
-                <StatusBadge status={g.attainment.status} />
+                <StatusBadge status={g.status} />
               </button>
             )
           })}
@@ -165,7 +168,7 @@ export default function PlanPage() {
               </div>
               <div className="p-2">
                 {step.items.map((item) => (
-                  <CheckRow key={item.id} item={item} check={checkByItem.get(item.id)} childId={selectedChild.id} />
+                  <CheckRow key={item.id} item={item} check={checkByItem.get(item.id)} memberId={selectedMember.id} />
                 ))}
               </div>
               {step.materials.length > 0 && (

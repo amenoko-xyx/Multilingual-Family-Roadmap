@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../db'
-import { DEFAULT_LANGS, type Child, type Lang } from '../types'
+import { DEFAULT_MEMBER_LANGS, ROLES, type Lang, type Member, type MemberLanguage } from '../types'
 
 export interface ToastState {
   message: string
@@ -10,58 +10,66 @@ export interface ToastState {
 }
 
 interface AppContextValue {
-  children_: Child[]
-  /** 子供リストの読み込みが完了したか(完了前にリダイレクト判定しないため) */
+  members: Member[]
+  /** メンバーリストの読み込みが完了したか(完了前にリダイレクト判定しないため) */
   ready: boolean
-  selectedChild: Child | null
-  selectChild: (id: string) => void
-  /** 第一・第二(・任意で第三)言語。設定で変更可能 */
+  selectedMember: Member | null
+  selectMember: (id: string) => void
+  /** 選択中メンバーの言語構成(役割順)。未選択時はデフォルト構成 */
+  memberLanguages: MemberLanguage[]
+  /** 役割順(母語→第一外国語→第二外国語)の言語配列。ページ側の互換用 */
   langs: Lang[]
-  /** 位置別の判定ペース係数(1=しっかり、0.75=ゆるめ)。設定「目標レベルの傾斜」で変更 */
-  paces: [number, number, number]
+  /** langs と同順の判定ペース係数(1=しっかり、0.75=ゆるめ) */
+  paces: number[]
   toast: ToastState | null
   /** 操作結果の通知+取り消し手段の提供(ニールセン: 状態の可視化/ユーザーの主導権) */
   showToast: (t: ToastState) => void
   dismissToast: () => void
 }
 
+/** languages を役割順(native → foreign1 → foreign2)に並べる */
+function sortByRole(languages: MemberLanguage[]): MemberLanguage[] {
+  return languages.slice().sort((a, b) => ROLES.indexOf(a.role) - ROLES.indexOf(b.role))
+}
+
 const Ctx = createContext<AppContextValue>({
-  children_: [],
+  members: [],
   ready: false,
-  selectedChild: null,
-  selectChild: () => {},
-  langs: DEFAULT_LANGS,
-  paces: [1, 1, 1],
+  selectedMember: null,
+  selectMember: () => {},
+  memberLanguages: DEFAULT_MEMBER_LANGS,
+  langs: DEFAULT_MEMBER_LANGS.map((ml) => ml.lang),
+  paces: DEFAULT_MEMBER_LANGS.map((ml) => ml.pace),
   toast: null,
   showToast: () => {},
   dismissToast: () => {},
 })
 
-const LS_KEY = 'trilingual-roadmap:selectedChild'
+const LS_KEY = 'multilingual-family-roadmap:selectedMember'
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const kids = useLiveQuery(() => db.children.toArray(), [], undefined)
-  const langsSetting = useLiveQuery(() => db.settings.get('langs'), [], undefined)
+  const rows = useLiveQuery(() => db.members.toArray(), [], undefined)
   const [selectedId, setSelectedId] = useState<string | null>(() => localStorage.getItem(LS_KEY))
   const [toast, setToast] = useState<ToastState | null>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const list = (kids ?? []).slice().sort((a, b) => a.birthDate.localeCompare(b.birthDate))
-  const selectedChild = list.find((c) => c.id === selectedId) ?? list[0] ?? null
+  // 生年月日順(未設定の大人は後ろ)→ 名前順で安定ソート
+  const list = (rows ?? []).slice().sort((a, b) => {
+    if (a.birthDate && b.birthDate) return a.birthDate.localeCompare(b.birthDate)
+    if (a.birthDate !== b.birthDate) return a.birthDate ? -1 : 1
+    return a.name.localeCompare(b.name)
+  })
+  const selectedMember = list.find((m) => m.id === selectedId) ?? list[0] ?? null
 
-  // 第三言語は任意:設定値が2言語ならそのまま2言語で運用する
-  const raw = ((langsSetting?.value as Lang[] | undefined) ?? DEFAULT_LANGS).filter(Boolean)
-  const langs: Lang[] = raw.length >= 2 ? raw.slice(0, 3) : [...DEFAULT_LANGS]
-
-  const paceSetting = useLiveQuery(() => db.settings.get('paceFactors'), [], undefined)
-  const rawPace = (paceSetting?.value as number[] | undefined) ?? [1, 1, 1]
-  const paces: [number, number, number] = [rawPace[0] ?? 1, rawPace[1] ?? 1, rawPace[2] ?? 1]
+  const memberLanguages = sortByRole(selectedMember?.languages ?? DEFAULT_MEMBER_LANGS)
+  const langs: Lang[] = memberLanguages.map((ml) => ml.lang)
+  const paces: number[] = memberLanguages.map((ml) => ml.pace)
 
   useEffect(() => {
-    if (selectedChild && selectedChild.id !== selectedId) setSelectedId(selectedChild.id)
-  }, [selectedChild?.id])
+    if (selectedMember && selectedMember.id !== selectedId) setSelectedId(selectedMember.id)
+  }, [selectedMember?.id])
 
-  const selectChild = (id: string) => {
+  const selectMember = (id: string) => {
     setSelectedId(id)
     localStorage.setItem(LS_KEY, id)
   }
@@ -79,7 +87,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   return (
     <Ctx.Provider
-      value={{ children_: list, ready: kids !== undefined, selectedChild, selectChild, langs, paces, toast, showToast, dismissToast }}
+      value={{
+        members: list,
+        ready: rows !== undefined,
+        selectedMember,
+        selectMember,
+        memberLanguages,
+        langs,
+        paces,
+        toast,
+        showToast,
+        dismissToast,
+      }}
     >
       {children}
     </Ctx.Provider>

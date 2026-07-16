@@ -1,19 +1,22 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { db, deleteChildWithChecks, exportAll, importAll, resetRoadmapToSeed, setPaceFactors, setSelectedLangs } from '../db'
+import { db, deleteMemberWithChecks, exportAll, importAll, resetRoadmapToSeed, updateMemberLanguages } from '../db'
 import { useApp } from '../context/AppContext'
-import { ALL_LANGS, type Child, type ExportData, type Lang } from '../types'
+import { ALL_LANGS, ROLES, STAGES, type ExportData, type Lang, type Member, type MemberLanguage, type Role } from '../types'
 import { ageAt, ageLabel, fmtDateJa, minBirthDateStr, todayStr } from '../lib/dates'
-import { Card, ConfirmDialog, Icon, PrimaryButton, SectionTitle } from '../components/ui'
+import { Card, ConfirmDialog, Icon, PrimaryButton, SectionTitle, stageLabel } from '../components/ui'
 import { T } from '../i18n'
 import { CONTACT_EMAIL, CONTACT_FORM_URL } from '../config'
 
+/** 役割ごとの目標レベルのデフォルト(新規に役割を足すとき用) */
+const DEFAULT_TARGET: Record<Role, number> = { native: 6, foreign1: 5, foreign2: 4 }
+
 export default function SettingsPage() {
-  const { children_, langs, paces, showToast } = useApp()
-  const [deleting, setDeleting] = useState<Child | null>(null)
+  const { members, selectedMember, memberLanguages, showToast } = useApp()
+  const [deleting, setDeleting] = useState<Member | null>(null)
   const [resetOpen, setResetOpen] = useState(false)
   const [importData, setImportData] = useState<ExportData | null>(null)
-  const [editing, setEditing] = useState<Child | null>(null)
+  const [editing, setEditing] = useState<Member | null>(null)
   const [editForm, setEditForm] = useState({ name: '', birthDate: '', note: '' })
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -46,63 +49,74 @@ export default function SettingsPage() {
     showToast({ message: 'インポートが完了しました' })
   }
 
-  const startEdit = (c: Child) => {
-    setEditing(c)
-    setEditForm({ name: c.name, birthDate: c.birthDate, note: c.note ?? '' })
+  const startEdit = (m: Member) => {
+    setEditing(m)
+    setEditForm({ name: m.name, birthDate: m.birthDate ?? '', note: m.note ?? '' })
   }
 
   const saveEdit = async () => {
-    if (!editing || !editForm.name.trim() || !editForm.birthDate) return
-    if (editForm.birthDate < minBirthDateStr() || editForm.birthDate > todayStr()) {
+    if (!editing || !editForm.name.trim()) return
+    // 子供は生年月日必須。大人は任意。入力があるときのみ範囲チェック
+    if (editing.kind === 'child' && !editForm.birthDate) return
+    if (editForm.birthDate && (editForm.birthDate < minBirthDateStr() || editForm.birthDate > todayStr())) {
       showToast({ message: '生年月日を確認してください(0〜100歳を想定しています)' })
       return
     }
-    await db.children.update(editing.id, {
+    await db.members.update(editing.id, {
       name: editForm.name.trim(),
-      birthDate: editForm.birthDate,
+      birthDate: editForm.birthDate || null,
       note: editForm.note.trim() || undefined,
     })
     setEditing(null)
     showToast({ message: '保存しました' })
   }
 
-  /**
-   * 言語の変更。選んだ言語が他のポジションと重複する場合は位置を入れ替える(swap)。
-   * 第三言語は任意:空文字を渡すと2言語運用になる。
-   */
-  const changeLang = async (pos: number, newLang: Lang | '') => {
-    if (newLang === '') {
-      // 第三言語を外す
-      await setSelectedLangs(langs.slice(0, 2))
-      showToast({ message: '第三言語を外しました(2言語で運用します)' })
-      return
+  /* ---------- 選択中メンバーの言語構成の編集 ---------- */
+
+  const mlOf = (role: Role) => memberLanguages.find((ml) => ml.role === role)
+
+  const saveLangs = async (next: MemberLanguage[]) => {
+    if (!selectedMember) return
+    await updateMemberLanguages(selectedMember.id, next)
+    showToast({ message: '言語構成を保存しました' })
+  }
+
+  /** 役割の言語を変更。第二外国語は空('')で「設定しない」。他役割と重複したら入れ替える。 */
+  const changeRoleLang = async (role: Role, newLang: Lang | '') => {
+    if (!selectedMember) return
+    let next = memberLanguages.map((ml) => ({ ...ml }))
+    if (role === 'foreign2' && newLang === '') {
+      next = next.filter((ml) => ml.role !== 'foreign2')
+      return saveLangs(next)
     }
-    const next = [...langs]
-    if (pos >= next.length) {
-      // 第三言語を新たに追加
-      if (next.includes(newLang)) {
-        showToast({ message: `${T.lang[newLang]}はすでに選択されています` })
-        return
-      }
-      next.push(newLang)
+    if (newLang === '') return
+    const target = next.find((ml) => ml.role === role)
+    const dup = next.find((ml) => ml.lang === newLang && ml.role !== role)
+    if (target) {
+      if (dup) dup.lang = target.lang // swap で重複を避ける
+      target.lang = newLang
     } else {
-      const dupIdx = next.findIndex((l, i) => i !== pos && l === newLang)
-      if (dupIdx >= 0) next[dupIdx] = next[pos]
-      next[pos] = newLang
+      // 第二外国語を新たに追加
+      if (dup) return void showToast({ message: `${T.lang[newLang]}はすでに設定されています` })
+      next.push({ lang: newLang, role, targetStage: DEFAULT_TARGET[role], pace: 1 })
     }
-    await setSelectedLangs(next)
-    showToast({ message: '言語設定を保存しました' })
+    saveLangs(next)
+  }
+
+  const changeRoleField = async (role: Role, patch: Partial<MemberLanguage>) => {
+    const next = memberLanguages.map((ml) => (ml.role === role ? { ...ml, ...patch } : { ...ml }))
+    saveLangs(next)
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
-      {/* 子供の管理(OOUI: オブジェクト一覧+各オブジェクトへの操作) */}
+      {/* メンバーの管理(OOUI: オブジェクト一覧+各オブジェクトへの操作) */}
       <section>
-        <SectionTitle>お子さんの管理(3人まで表示されます)</SectionTitle>
+        <SectionTitle>メンバーの管理(3人まで表示されます)</SectionTitle>
         <div className="space-y-3">
-          {children_.map((c) =>
-            editing?.id === c.id ? (
-              <Card key={c.id} className="space-y-3 p-4">
+          {members.map((m) =>
+            editing?.id === m.id ? (
+              <Card key={m.id} className="space-y-3 p-4">
                 <input
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
@@ -129,144 +143,142 @@ export default function SettingsPage() {
                   <button onClick={() => setEditing(null)} className="rounded-xl border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-50">
                     キャンセル
                   </button>
-                  <PrimaryButton onClick={saveEdit} disabled={!editForm.name.trim() || !editForm.birthDate}>
+                  <PrimaryButton onClick={saveEdit} disabled={!editForm.name.trim() || (editing.kind === 'child' && !editForm.birthDate)}>
                     保存
                   </PrimaryButton>
                 </div>
               </Card>
             ) : (
-              <Card key={c.id} className="flex items-center gap-3 p-4">
+              <Card key={m.id} className="flex items-center gap-3 p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-                  <Icon name="child_care" className="text-xl" />
+                  <Icon name={m.kind === 'adult' ? 'person' : 'child_care'} className="text-xl" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-neutral-800">{c.name}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-neutral-800">{m.name}</span>
+                    <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-500">
+                      {m.kind === 'adult' ? '大人' : '子供'}
+                    </span>
+                  </div>
                   <div className="text-xs text-neutral-400">
-                    {fmtDateJa(c.birthDate)} 生まれ({ageLabel(ageAt(c.birthDate, todayStr()))})
-                    {c.note ? ` ・ ${c.note}` : ''}
+                    {m.birthDate
+                      ? `${fmtDateJa(m.birthDate)} 生まれ(${ageLabel(ageAt(m.birthDate, todayStr()))})`
+                      : '生年月日 未設定'}
+                    {m.note ? ` ・ ${m.note}` : ''}
                   </div>
                 </div>
-                <button onClick={() => startEdit(c)} aria-label={`${c.name}を編集`} className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-100 hover:text-brand-600">
+                <button onClick={() => startEdit(m)} aria-label={`${m.name}を編集`} className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-100 hover:text-brand-600">
                   <Icon name="edit" className="text-lg" />
                 </button>
-                <button onClick={() => setDeleting(c)} aria-label={`${c.name}を削除`} className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-100 hover:text-rose-500">
+                <button onClick={() => setDeleting(m)} aria-label={`${m.name}を削除`} className="flex h-9 w-9 items-center justify-center rounded-full text-neutral-400 hover:bg-neutral-100 hover:text-rose-500">
                   <Icon name="delete" className="text-lg" />
                 </button>
               </Card>
             ),
           )}
-          {children_.length < 3 && (
+          {members.length < 3 && (
             <Link
               to="/onboarding"
               className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-neutral-300 bg-white px-4 py-4 text-sm font-medium text-brand-700 hover:border-brand-400 hover:bg-brand-50/40"
             >
               <Icon name="person_add" className="text-lg" />
-              お子さんを追加(いまのようすも一緒に記録)
+              メンバーを追加(いまのようすも一緒に記録)
             </Link>
           )}
         </div>
       </section>
 
-      {/* 言語設定 */}
+      {/* 選択中メンバーの言語構成(役割・言語・目標レベル・判定ペース) */}
       <section>
-        <SectionTitle>言語設定(第一〜第三言語)</SectionTitle>
-        <Card className="space-y-4 p-4">
-          <div className="grid gap-3 sm:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <label key={i} className="block text-sm text-neutral-600">
-                {T.langOrder[i]}
-                {i === 2 && <span className="ml-1 text-xs text-neutral-400">(任意)</span>}
-                <select
-                  value={langs[i] ?? ''}
-                  onChange={(e) => changeLang(i, e.target.value as Lang | '')}
-                  className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm"
-                >
-                  {i === 2 && <option value="">設定しない(2言語で運用)</option>}
-                  {ALL_LANGS.map((al) => (
-                    <option key={al} value={al}>{T.lang[al]}</option>
-                  ))}
-                </select>
-              </label>
-            ))}
-          </div>
-          <p className="text-xs leading-relaxed text-neutral-400">
-            6言語すべてに初期テンプレートが用意されています。言語を切り替えても各言語の記録は保持されます。
-            タグの色は第一言語がもっとも薄く、あとの言語ほど鮮やかになります。第三言語は任意です。
-          </p>
-          <p className="text-xs leading-relaxed text-neutral-400">
-            広東語・ポルトガル語・スペイン語のテンプレートは翻案下書きです。ロードマップ画面で編集できます。
-          </p>
-        </Card>
-      </section>
-
-      {/* 目標レベルの傾斜 */}
-      <section>
-        <SectionTitle>目標レベルの傾斜(18歳時点の到達目標)</SectionTitle>
-        <Card className="space-y-4 p-4">
-          {/* 傾斜の中身:位置ごとの目標と判定ペースの選択 */}
-          <ul className="divide-y divide-neutral-100">
-            {langs.map((l, i) => (
-              <li key={i} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-neutral-400">{T.langOrder[i]}</span>
-                    <span className="text-sm font-semibold text-neutral-800">{T.lang[l]}</span>
-                  </div>
-                  <p className="mt-0.5 text-xs leading-relaxed text-neutral-500">
-                    {i === 0 && '母語(学齢相当の国語力)。思考と学習の土台であり、他言語の伸びを支えます。'}
-                    {i === 1 && 'CEFR B2〜C1相当(英語なら英検準1級)。留学・仕事で自立して使えるレベル。'}
-                    {i === 2 && 'CEFR B1相当(中国語ならHSK4〜5級)。日常が回り、将来伸ばせる土台。'}
-                  </p>
-                </div>
-                {i === 0 ? (
-                  <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-500">基準(固定)</span>
-                ) : (
-                  <label className="text-xs text-neutral-500">
-                    判定ペース
+        <SectionTitle>
+          選択中メンバーの言語構成{selectedMember ? `(${selectedMember.name}さん)` : ''}
+        </SectionTitle>
+        {!selectedMember ? (
+          <Card className="p-4 text-sm text-neutral-500">メンバーを登録すると言語構成を設定できます。</Card>
+        ) : (
+          <Card className="space-y-4 p-4">
+            <ul className="divide-y divide-neutral-100">
+              {ROLES.map((role) => {
+                const ml = mlOf(role)
+                const isOptional = role === 'foreign2'
+                return (
+                  <li key={role} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3">
+                    <span className="w-20 shrink-0 text-sm font-semibold text-neutral-700">{T.role[role]}</span>
                     <select
-                      value={paces[i]}
-                      onChange={async (e) => {
-                        const next = [...paces] as [number, number, number]
-                        next[i] = Number(e.target.value)
-                        await setPaceFactors(next)
-                        showToast({ message: '傾斜の設定を保存しました' })
-                      }}
-                      className="ml-2 rounded-xl border border-neutral-200 px-2 py-1.5 text-sm"
+                      value={ml?.lang ?? ''}
+                      onChange={(e) => changeRoleLang(role, e.target.value as Lang | '')}
+                      aria-label={`${T.role[role]}の言語`}
+                      className="rounded-xl border border-neutral-200 px-2.5 py-1.5 text-sm"
                     >
-                      <option value={1}>しっかり(標準)</option>
-                      <option value={0.75}>ゆるめ(×0.75)</option>
+                      {isOptional && <option value="">設定しない</option>}
+                      {ALL_LANGS.map((al) => (
+                        <option key={al} value={al}>{T.lang[al]}</option>
+                      ))}
                     </select>
-                  </label>
-                )}
-              </li>
-            ))}
-          </ul>
-
-          {/* 傾斜をつけている理由と基準 */}
-          <div className="rounded-xl bg-neutral-50 p-3.5 text-xs leading-relaxed text-neutral-500">
-            <p className="mb-1 font-semibold text-neutral-600">なぜ傾斜をつけるのか</p>
-            <ul className="list-disc space-y-1 pl-4">
-              <li>
-                <span className="font-medium text-neutral-600">時間の逆算:</span>
-                CEFR B2〜C1には1,000時間規模の学習が必要(日本語話者の英語はさらに長め)。
-                3言語すべてに同じ水準を求めると週12時間超になり、生活と両立できません。
-              </li>
-              <li>
-                <span className="font-medium text-neutral-600">母語が土台:</span>
-                読解力・抽象思考は第一言語で育ち、他言語に転移します。第一言語は削らず基準に固定しています。
-              </li>
-              <li>
-                <span className="font-medium text-neutral-600">第三言語は継続優先:</span>
-                B1の土台があれば、本人が必要になったとき大人の効率で伸ばせます。
-                嫌いにならないことが最重要のため、「ゆるめ」ペースも選べます。
-              </li>
+                    {ml && (
+                      <>
+                        <label className="text-xs text-neutral-500">
+                          目標
+                          <select
+                            value={ml.targetStage}
+                            onChange={(e) => changeRoleField(role, { targetStage: Number(e.target.value) })}
+                            aria-label={`${T.role[role]}の目標レベル`}
+                            className="ml-1 rounded-xl border border-neutral-200 px-2 py-1.5 text-sm"
+                          >
+                            {STAGES.map((s) => (
+                              <option key={s.idx} value={s.idx}>{stageLabel(s.idx)}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="text-xs text-neutral-500">
+                          ペース
+                          <select
+                            value={ml.pace}
+                            onChange={(e) => changeRoleField(role, { pace: Number(e.target.value) })}
+                            aria-label={`${T.role[role]}の判定ペース`}
+                            className="ml-1 rounded-xl border border-neutral-200 px-2 py-1.5 text-sm"
+                          >
+                            <option value={1}>しっかり(標準)</option>
+                            <option value={0.75}>ゆるめ(×0.75)</option>
+                          </select>
+                        </label>
+                      </>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
-            <p className="mt-2 text-neutral-400">
-              基準:CEFR(ヨーロッパ言語共通参照枠)・英検・HSKの対応表をもとに、各言語のロードマップの年齢帯ごとの到達目安に織り込み済みです。
-              「判定ペース」を「ゆるめ」にすると、順調/遅れの判定基準が実年齢×0.75になります(ロードマップの中身は変わりません)。
-            </p>
-          </div>
-        </Card>
+
+            {/* 傾斜をつけている理由と基準(役割ベース) */}
+            <div className="rounded-xl bg-neutral-50 p-3.5 text-xs leading-relaxed text-neutral-500">
+              <p className="mb-1 font-semibold text-neutral-600">なぜ役割ごとに目標を変えるのか</p>
+              <ul className="list-disc space-y-1 pl-4">
+                <li>
+                  <span className="font-medium text-neutral-600">時間の逆算:</span>
+                  CEFR B2〜C1(S5〜S6)には1,000時間規模の学習が必要です。
+                  すべての言語に同じ水準を求めると生活と両立できないため、役割ごとに目標を傾けます。
+                </li>
+                <li>
+                  <span className="font-medium text-neutral-600">母語が土台:</span>
+                  読解力・抽象思考は母語で育ち、外国語に転移します。母語の目標(既定S6)は高めに保ちます。
+                </li>
+                <li>
+                  <span className="font-medium text-neutral-600">第二外国語は継続優先:</span>
+                  土台(既定S4)があれば、本人が必要になったとき大人の効率で伸ばせます。
+                  嫌いにならないことが最重要のため、「ゆるめ」ペースも選べます。第二外国語は「設定しない」も可能です。
+                </li>
+              </ul>
+              <p className="mt-2 text-neutral-400">
+                目標レベルの既定傾斜:{ROLES.map((r) => `${T.role[r]}=${stageLabel(DEFAULT_TARGET[r])}`).join(' / ')}。
+                「判定ペース」を「ゆるめ」にすると、順調/遅れの判定基準がペース×0.75になります(ロードマップの中身は変わりません)。
+              </p>
+              <p className="mt-2 text-neutral-400">
+                6言語すべてに初期テンプレートが用意されています。言語を切り替えても各言語の記録は保持されます。
+                韓国語・ポルトガル語・スペイン語のテンプレートは翻案下書きで、ロードマップ画面で編集できます。
+              </p>
+            </div>
+          </Card>
+        )}
       </section>
 
       {/* バックアップ */}
@@ -331,7 +343,7 @@ export default function SettingsPage() {
       <section>
         <SectionTitle>ロードマップ</SectionTitle>
         <Card className="flex flex-wrap items-center justify-between gap-3 p-4">
-          <p className="text-sm text-neutral-500">Can-Do項目・教材リストを初期テンプレートに戻します(チェック記録と子供は残ります)。</p>
+          <p className="text-sm text-neutral-500">Can-Do項目・教材リストを初期テンプレートに戻します(チェック記録とメンバーは残ります)。</p>
           <button onClick={() => setResetOpen(true)} className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-50">
             <Icon name="restart_alt" className="text-lg" />
             初期テンプレートに戻す
@@ -377,8 +389,8 @@ export default function SettingsPage() {
       <ConfirmDialog
         open={deleting !== null}
         onClose={() => setDeleting(null)}
-        onConfirm={() => deleting && deleteChildWithChecks(deleting.id)}
-        title="お子さんの削除"
+        onConfirm={() => deleting && deleteMemberWithChecks(deleting.id)}
+        title="メンバーの削除"
         message={
           deleting && (
             <>
@@ -408,7 +420,7 @@ export default function SettingsPage() {
           importData && (
             <>
               {fmtDateJa(importData.exportedAt.slice(0, 10))} にエクスポートされたデータ
-              (お子さん {importData.children.length} 人・チェック {importData.checks?.length ?? 0} 件)で、
+              (メンバー {importData.members.length} 人・チェック {importData.checks?.length ?? 0} 件)で、
               <strong className="text-rose-600">現在の全データを置き換えます。</strong>よろしいですか?
             </>
           )

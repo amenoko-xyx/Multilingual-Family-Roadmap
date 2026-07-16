@@ -1,24 +1,23 @@
 import Dexie, { type Table } from 'dexie'
-import {
-  DEFAULT_LANGS,
-  type AppSetting,
-  type CanDoItem,
-  type Cell,
-  type CheckRecord,
-  type Child,
-  type ExportData,
-  type Lang,
-  type Material,
-  type MaterialStatus,
-  type MaterialStatusValue,
+import type {
+  AppSetting,
+  CanDoItem,
+  Cell,
+  CheckRecord,
+  ExportData,
+  Material,
+  MaterialStatus,
+  MaterialStatusValue,
+  Member,
+  MemberLanguage,
 } from './types'
 import { buildLangSeed, SEEDABLE_LANGS } from './seed/roadmapSeed'
 import { MATERIALS_SEED } from './seed/materialsSeed'
 
-export const EXPORT_VERSION = 3
+export const EXPORT_VERSION = 4
 
 class RoadmapDB extends Dexie {
-  children!: Table<Child, string>
+  members!: Table<Member, string>
   checks!: Table<CheckRecord, string>
   items!: Table<CanDoItem, string>
   cells!: Table<Cell, string>
@@ -27,21 +26,15 @@ class RoadmapDB extends Dexie {
   settings!: Table<AppSetting, string>
 
   constructor() {
-    super('trilingual-roadmap')
+    // v3 で「家族全員・レベル段階軸」へ移行したため、旧アプリ(trilingual-roadmap)とは別DBとして新規定義
+    super('multilingual-family-roadmap')
     this.version(1).stores({
-      children: 'id',
-      checks: 'id, childId, itemId, achievedOn',
-      items: 'id, band, [lang+skill]',
+      members: 'id',
+      checks: 'id, memberId, itemId, achievedOn',
+      items: 'id, stage, [lang+skill]',
       cells: 'id',
       materials: 'id',
-    })
-    this.version(2).stores({
-      children: 'id',
-      checks: 'id, childId, itemId, achievedOn',
-      items: 'id, band, [lang+skill]',
-      cells: 'id',
-      materials: 'id',
-      materialStatus: 'id, childId, materialId',
+      materialStatus: 'id, memberId, materialId',
       settings: 'key',
     })
   }
@@ -55,7 +48,7 @@ export const db = new RoadmapDB()
  */
 export async function ensureSeed(): Promise<void> {
   for (const lang of SEEDABLE_LANGS) {
-    const exists = await db.cells.get(`${lang}-0`)
+    const exists = await db.cells.get(`${lang}-1`)
     if (exists) continue
     const { cells, items } = buildLangSeed(lang)
     // ユーザーが個別に消した項目を勝手に復活させないよう、言語単位でのみ投入
@@ -67,23 +60,12 @@ export async function ensureSeed(): Promise<void> {
   if ((await db.materials.count()) === 0) await db.materials.bulkPut(MATERIALS_SEED)
 }
 
-/** 選択中の言語を取得(2〜3個。第三言語は任意) */
-export async function getSelectedLangs(): Promise<Lang[]> {
-  const s = await db.settings.get('langs')
-  const v = ((s?.value as Lang[] | undefined) ?? DEFAULT_LANGS).filter(Boolean)
-  return v.length >= 2 ? v.slice(0, 3) : DEFAULT_LANGS
+/** 選択中メンバーの言語構成(役割・目標・ペース)を更新する */
+export async function updateMemberLanguages(memberId: string, languages: MemberLanguage[]): Promise<void> {
+  await db.members.update(memberId, { languages })
 }
 
-export async function setSelectedLangs(langs: Lang[]): Promise<void> {
-  await db.settings.put({ key: 'langs', value: langs })
-}
-
-/** 判定ペース係数(第一〜第三言語の順。1=しっかり、0.75=ゆるめ) */
-export async function setPaceFactors(paces: [number, number, number]): Promise<void> {
-  await db.settings.put({ key: 'paceFactors', value: paces })
-}
-
-/** ロードマップ(セル・項目・教材)を初期テンプレートに戻す。チェック記録と子供は残す */
+/** ロードマップ(セル・項目・教材)を初期テンプレートに戻す。チェック記録とメンバーは残す */
 export async function resetRoadmapToSeed(): Promise<void> {
   await db.transaction('rw', db.cells, db.items, db.materials, async () => {
     await db.cells.clear()
@@ -99,8 +81,8 @@ export async function resetRoadmapToSeed(): Promise<void> {
 }
 
 export async function exportAll(): Promise<ExportData> {
-  const [children, checks, cells, items, materials, materialStatuses, settings] = await Promise.all([
-    db.children.toArray(),
+  const [members, checks, cells, items, materials, materialStatuses, settings] = await Promise.all([
+    db.members.toArray(),
     db.checks.toArray(),
     db.cells.toArray(),
     db.items.toArray(),
@@ -112,7 +94,7 @@ export async function exportAll(): Promise<ExportData> {
     app: 'trilingual-roadmap',
     version: EXPORT_VERSION,
     exportedAt: new Date().toISOString(),
-    children,
+    members,
     checks,
     materialStatuses,
     settings,
@@ -121,15 +103,15 @@ export async function exportAll(): Promise<ExportData> {
 }
 
 export async function importAll(data: ExportData): Promise<void> {
-  if (data.app !== 'trilingual-roadmap' || !Array.isArray(data.children) || !data.roadmap) {
-    throw new Error('このファイルは Trilingual Roadmap のバックアップではありません')
+  if (data.app !== 'trilingual-roadmap' || !Array.isArray(data.members) || !data.roadmap) {
+    throw new Error('このファイルは Multilingual Family Roadmap のバックアップではありません')
   }
   await db.transaction(
     'rw',
-    [db.children, db.checks, db.cells, db.items, db.materials, db.materialStatus, db.settings],
+    [db.members, db.checks, db.cells, db.items, db.materials, db.materialStatus, db.settings],
     async () => {
       await Promise.all([
-        db.children.clear(),
+        db.members.clear(),
         db.checks.clear(),
         db.cells.clear(),
         db.items.clear(),
@@ -137,7 +119,7 @@ export async function importAll(data: ExportData): Promise<void> {
         db.materialStatus.clear(),
         db.settings.clear(),
       ])
-      await db.children.bulkPut(data.children)
+      await db.members.bulkPut(data.members)
       await db.checks.bulkPut(data.checks ?? [])
       await db.cells.bulkPut(data.roadmap.cells ?? [])
       await db.items.bulkPut(data.roadmap.items ?? [])
@@ -151,39 +133,39 @@ export async function importAll(data: ExportData): Promise<void> {
 }
 
 /** チェックの付与(当日日付で記録、後から修正可能) */
-export async function addCheck(childId: string, itemId: string, achievedOn: string): Promise<void> {
+export async function addCheck(memberId: string, itemId: string, achievedOn: string): Promise<void> {
   await db.checks.put({
-    id: `${childId}:${itemId}`,
-    childId,
+    id: `${memberId}:${itemId}`,
+    memberId,
     itemId,
     achievedOn,
     recordedAt: new Date().toISOString(),
   })
 }
 
-export async function removeCheck(childId: string, itemId: string): Promise<void> {
-  await db.checks.delete(`${childId}:${itemId}`)
+export async function removeCheck(memberId: string, itemId: string): Promise<void> {
+  await db.checks.delete(`${memberId}:${itemId}`)
 }
 
-export async function updateCheckDate(childId: string, itemId: string, achievedOn: string): Promise<void> {
-  await db.checks.update(`${childId}:${itemId}`, { achievedOn })
+export async function updateCheckDate(memberId: string, itemId: string, achievedOn: string): Promise<void> {
+  await db.checks.update(`${memberId}:${itemId}`, { achievedOn })
 }
 
-/** 教材の取り組みステータス(子供ごと) */
+/** 教材の取り組みステータス(メンバーごと) */
 export async function setMaterialStatus(
-  childId: string,
+  memberId: string,
   materialId: string,
   status: MaterialStatusValue,
 ): Promise<void> {
-  const id = `${childId}:${materialId}`
+  const id = `${memberId}:${materialId}`
   if (status === 'notStarted') {
     await db.materialStatus.delete(id) // 既定値はレコード不要
   } else {
-    await db.materialStatus.put({ id, childId, materialId, status })
+    await db.materialStatus.put({ id, memberId, materialId, status })
   }
 }
 
-/** Can-Do項目の削除(紐づく全子供のチェック記録も削除) */
+/** Can-Do項目の削除(紐づく全メンバーのチェック記録も削除) */
 export async function deleteItemWithChecks(itemId: string): Promise<void> {
   await db.transaction('rw', db.items, db.checks, async () => {
     await db.items.delete(itemId)
@@ -191,11 +173,11 @@ export async function deleteItemWithChecks(itemId: string): Promise<void> {
   })
 }
 
-export async function deleteChildWithChecks(childId: string): Promise<void> {
-  await db.transaction('rw', db.children, db.checks, db.materialStatus, async () => {
-    await db.children.delete(childId)
-    await db.checks.where('childId').equals(childId).delete()
-    await db.materialStatus.where('childId').equals(childId).delete()
+export async function deleteMemberWithChecks(memberId: string): Promise<void> {
+  await db.transaction('rw', db.members, db.checks, db.materialStatus, async () => {
+    await db.members.delete(memberId)
+    await db.checks.where('memberId').equals(memberId).delete()
+    await db.materialStatus.where('memberId').equals(memberId).delete()
   })
 }
 

@@ -3,47 +3,58 @@ import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { db, addCheck } from '../db'
 import { useApp } from '../context/AppContext'
-import { BANDS, SKILLS, type CheckRecord, type Lang, type Skill } from '../types'
-import { ageAt, ageLabel, roundAge, todayStr } from '../lib/dates'
-import { computeAttainment, type Attainment } from '../lib/logic'
-import { Card, ConfirmDialog, EmptyState, Icon, LangChip, SectionTitle, SkillLabel, StatusBadge, langStroke } from '../components/ui'
+import { SKILLS, type CheckRecord, type Lang, type Skill } from '../types'
+import { todayStr } from '../lib/dates'
+import { allSkillGaps, type SkillGap, type Status } from '../lib/logic'
+import { Card, ConfirmDialog, EmptyState, Icon, LangChip, SectionTitle, SkillLabel, StatusBadge, langStroke, stageLabel } from '../components/ui'
 import { RadarBlock } from '../components/RadarBlock'
 import { T } from '../i18n'
 
-function gapText(a: Attainment): string {
-  if (a.attained === null) return 'まだ記録がありません'
-  const m = a.gapMonths ?? 0
-  if (m >= 3) return `理想より約${m}ヶ月先行`
-  if (m <= -3) return `理想より約${-m}ヶ月遅れ`
-  return '実年齢とほぼ同水準'
+/** 状態ごとの一言(役割別の目標に対する進捗) */
+function gapText(status: Status): string {
+  switch (status) {
+    case 'unrecorded':
+      return 'まだ記録がありません'
+    case 'achieved':
+      return '目標レベルに到達しています'
+    case 'ahead':
+      return '目標ペースより先行しています'
+    case 'onTrack':
+      return '順調に進んでいます'
+    case 'slightBehind':
+      return '目標ペースよりやや遅れ気味です'
+    case 'attention':
+      return '遅れが目立ちます。プランで巻き返しましょう'
+  }
 }
 
-/** F3: ギャップ分析(理想=実年齢 vs 到達年齢相当) */
+/** F3: ギャップ分析(役割別の目標レベル × 到達レベル) */
 export default function GapPage() {
-  const { selectedChild, langs, paces, children_ } = useApp()
+  const { selectedMember, members, langs, memberLanguages } = useApp()
   const items = useLiveQuery(() => db.items.toArray(), [], undefined)
   const checks = useLiveQuery(
-    () => (selectedChild ? db.checks.where('childId').equals(selectedChild.id).toArray() : Promise.resolve([] as CheckRecord[])),
-    [selectedChild?.id],
+    () => (selectedMember ? db.checks.where('memberId').equals(selectedMember.id).toArray() : Promise.resolve([] as CheckRecord[])),
+    [selectedMember?.id],
     undefined,
   )
-  const [bulkTarget, setBulkTarget] = useState<{ lang: Lang; skill: Skill; bands: number[] } | null>(null)
+  const [bulkTarget, setBulkTarget] = useState<{ lang: Lang; skill: Skill; stages: number[] } | null>(null)
 
   if (items === undefined || checks === undefined) return null
-  if (!selectedChild) {
+  if (!selectedMember) {
     return (
-      <EmptyState icon="monitoring" title="お子さんが未登録です">
-        <Link to="/onboarding" className="font-medium text-brand-600">お子さんを登録</Link>すると分析できます。
+      <EmptyState icon="monitoring" title="メンバーが未登録です">
+        <Link to="/onboarding" className="font-medium text-brand-600">メンバーを登録</Link>すると分析できます。
       </EmptyState>
     )
   }
 
-  const age = ageAt(selectedChild.birthDate, todayStr())
+  const today = todayStr()
   const checkedIds = new Set(checks.map((c) => c.itemId))
-
-  const paceOf = (lang: Lang) => paces[langs.indexOf(lang)] ?? 1
-  const attainmentOf = (lang: Lang, skill: Skill) =>
-    computeAttainment(items.filter((i) => i.lang === lang && i.skill === skill), checkedIds, age, paceOf(lang))
+  const gaps = allSkillGaps(items, checks, selectedMember, today)
+  const gapByKey = new Map<string, SkillGap>(gaps.map((g) => [`${g.lang}:${g.skill}`, g]))
+  const mlOf = (lang: Lang) => memberLanguages.find((ml) => ml.lang === lang)
+  const targetOf = (lang: Lang) => mlOf(lang)?.targetStage ?? 6
+  const paceOf = (lang: Lang) => mlOf(lang)?.pace ?? 1
 
   const bulkCheck = async () => {
     if (!bulkTarget) return
@@ -51,24 +62,29 @@ export default function GapPage() {
       (i) =>
         i.lang === bulkTarget.lang &&
         i.skill === bulkTarget.skill &&
-        bulkTarget.bands.includes(i.band) &&
+        bulkTarget.stages.includes(i.stage) &&
         !checkedIds.has(i.id),
     )
-    for (const t of targets) await addCheck(selectedChild.id, t.id, todayStr())
+    for (const t of targets) await addCheck(selectedMember.id, t.id, today)
   }
+
+  // 役割別の目標傾斜を文言化(母語=S6・第一外国語=S5 など)
+  const targetSummary = memberLanguages
+    .map((ml) => `${T.role[ml.role]}=${stageLabel(ml.targetStage)}`)
+    .join(' / ')
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-xl font-bold text-neutral-900">ギャップ分析</h1>
         <p className="mt-1 text-sm text-neutral-500">
-          {selectedChild.name}さん(実年齢 {ageLabel(age)})の到達度を、チェック状態から自動算出しています。
+          {selectedMember.name}さんの到達レベルを、チェック状態から自動算出しています。
         </p>
-        {/* 傾斜の明示:3言語に同じ物差しを当てているわけではないことを伝える */}
+        {/* 傾斜の明示:役割ごとに異なる目標レベルを当てていることを伝える */}
         <p className="mt-2 inline-flex flex-wrap items-center gap-1.5 rounded-xl bg-neutral-100 px-3 py-2 text-xs leading-relaxed text-neutral-500">
           <Icon name="info" className="text-sm" />
-          判定は言語ごとの目標傾斜(第一言語=母語 / 第二言語=CEFR B2〜C1 / 第三言語=CEFR B1)に対するものです。
-          {paces.some((p) => p !== 1) && ' さらに「ゆるめ」ペースが適用中です。'}
+          判定は役割ごとの目標レベル({targetSummary})に対するものです。
+          {memberLanguages.some((ml) => ml.pace !== 1) && ' さらに「ゆるめ」ペースが適用中です。'}
           <Link to="/settings" className="font-medium text-brand-600 underline decoration-brand-300 underline-offset-2">
             傾斜の理由と設定
           </Link>
@@ -77,21 +93,21 @@ export default function GapPage() {
 
       {/* レーダーチャート */}
       <section>
-        <SectionTitle>言語×技能レーダー(点線=目標ペースライン)</SectionTitle>
+        <SectionTitle>言語×技能レーダー(点線=目標レベル)</SectionTitle>
         <Card className="grid gap-4 p-4 sm:grid-cols-3">
           {langs.map((lang) => {
             const values = Object.fromEntries(
-              SKILLS.map((s) => [s, attainmentOf(lang, s).attained]),
+              SKILLS.map((s) => [s, gapByKey.get(`${lang}:${s}`)?.result.level ?? null]),
             ) as Record<Skill, number | null>
-            // 目標ライン=実年齢×判定ペース(「ゆるめ」設定なら点線が下がり、傾斜が見える)
-            const target = Math.min(age * paceOf(lang), 19)
+            // 目標ライン=役割の目標レベル(全技能で一定)
+            const target = targetOf(lang)
             return (
               <RadarBlock
                 key={lang}
                 title={`${T.lang[lang]}${paceOf(lang) !== 1 ? '(ゆるめ)' : ''}`}
                 series={[
                   {
-                    name: '目標ペース',
+                    name: '目標レベル',
                     color: '#a3a3a3',
                     dashed: true,
                     values: { listening: target, speaking: target, reading: target, writing: target },
@@ -112,28 +128,31 @@ export default function GapPage() {
           </SectionTitle>
           <Card className="divide-y divide-neutral-100">
             {SKILLS.map((skill) => {
-              const a = attainmentOf(lang, skill)
+              const g = gapByKey.get(`${lang}:${skill}`)
+              const level = g?.result.level ?? null
+              const status = g?.status ?? 'unrecorded'
+              const warningStages = g?.result.warningStages ?? []
               return (
                 <div key={skill} className="px-4 py-3.5">
                   <div className="flex flex-wrap items-center gap-2">
                     <SkillLabel skill={skill} />
-                    <StatusBadge status={a.status} />
-                    {a.attained !== null && (
-                      <span className="text-sm tabular-nums text-neutral-500">{roundAge(a.attained)}歳相当</span>
+                    <StatusBadge status={status} />
+                    {level !== null && (
+                      <span className="text-sm tabular-nums text-neutral-500">S{level.toFixed(1)}</span>
                     )}
                     <span className="ml-auto text-xs text-neutral-400">
-                      {a.checkedCount}/{a.totalCount} 項目
+                      {g?.result.checkedCount ?? 0}/{g?.result.totalCount ?? 0} 項目
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-neutral-500">{gapText(a)}</p>
-                  {a.warningBands.length > 0 && (
+                  <p className="mt-1 text-xs text-neutral-500">{gapText(status)}</p>
+                  {warningStages.length > 0 && (
                     <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700">
                       <span className="inline-flex items-start gap-1">
                         <Icon name="warning" className="mt-0.5 text-sm" />
-                        下位の年齢帯({a.warningBands.map((b) => BANDS[b].label).join('・')})に未チェック項目があります。すでにできている場合はまとめてチェックできます。
+                        下位の段階({warningStages.map((s) => stageLabel(s)).join('・')})に未チェック項目があります。すでにできている場合はまとめてチェックできます。
                       </span>
                       <button
-                        onClick={() => setBulkTarget({ lang, skill, bands: a.warningBands })}
+                        onClick={() => setBulkTarget({ lang, skill, stages: warningStages })}
                         className="rounded-lg bg-amber-500 px-2.5 py-1 font-semibold text-white hover:bg-amber-600"
                       >
                         一括チェック
@@ -154,18 +173,18 @@ export default function GapPage() {
         </Link>
       </div>
 
-      {/* きょうだい比較への入口 */}
+      {/* 家族バランスへの入口 */}
       <section>
-        <SectionTitle>きょうだい比較</SectionTitle>
+        <SectionTitle>{T.nav.compare}</SectionTitle>
         <Card className="flex flex-col items-center gap-3 p-6 text-center">
           <p className="text-sm text-neutral-500">{T.compareNote}</p>
-          {children_.length >= 2 ? (
+          {members.length >= 2 ? (
             <Link to="/compare" className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
               <Icon name="groups" className="text-lg" />
-              同年齢時点で比較する
+              家族で見比べる
             </Link>
           ) : (
-            <p className="text-sm text-neutral-400">比較にはお子さんが2人以上必要です。設定から追加できます。</p>
+            <p className="text-sm text-neutral-400">見比べにはメンバーが2人以上必要です。設定から追加できます。</p>
           )}
         </Card>
       </section>
@@ -174,14 +193,14 @@ export default function GapPage() {
         open={bulkTarget !== null}
         onClose={() => setBulkTarget(null)}
         onConfirm={bulkCheck}
-        title="下位帯の一括チェック"
+        title="下位段階の一括チェック"
         danger={false}
         confirmLabel="一括チェックする"
         message={
           bulkTarget && (
             <>
               {T.lang[bulkTarget.lang]}・{T.skill[bulkTarget.skill]}の
-              {bulkTarget.bands.map((b) => BANDS[b].label).join('・')}にある未チェック項目すべてに、
+              {bulkTarget.stages.map((s) => stageLabel(s)).join('・')}にある未チェック項目すべてに、
               今日の日付でチェックを付けます。よろしいですか?
             </>
           )
