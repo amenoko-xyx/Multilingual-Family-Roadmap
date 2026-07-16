@@ -1,30 +1,28 @@
 import { describe, expect, it } from 'vitest'
-import type { CanDoItem, Lang, Material, Skill } from '../types'
+import type { CanDoItem, Lang, Material, Member, MemberLanguage, Skill } from '../types'
 import {
   allSkillGaps,
+  assessProgress,
   checkedIdsAsOf,
-  computeAttainment,
+  computeLevel,
+  expectedChildNativeLevel,
+  firstCheckOnFor,
   generatePlan,
   matchMaterials,
   recommendedActions,
 } from './logic'
 
-function makeItems(perBand: number[]): CanDoItem[] {
-  const items: CanDoItem[] = []
-  perBand.forEach((n, band) => {
-    for (let i = 0; i < n; i++) {
-      items.push({ id: `en-${band}-r-${i + 1}`, lang: 'en', band, skill: 'reading', text: `item ${band}-${i}`, order: i })
-    }
-  })
-  return items
+/** stage 1〜6 の項目を生成(perStage[0]=stage1)。id は `${lang}-${stage}-${skill}-${n}` */
+function makeItems(perStage: number[]): CanDoItem[] {
+  return makeItemsFor('en', 'reading', perStage)
 }
 
-/** makeItems の多言語・多技能版(id衝突を避けるため lang/skill を含める) */
-function makeItemsFor(lang: Lang, skill: Skill, perBand: number[]): CanDoItem[] {
+function makeItemsFor(lang: Lang, skill: Skill, perStage: number[]): CanDoItem[] {
   const items: CanDoItem[] = []
-  perBand.forEach((n, band) => {
+  perStage.forEach((n, idx) => {
+    const stage = idx + 1
     for (let i = 0; i < n; i++) {
-      items.push({ id: `${lang}-${skill}-${band}-${i + 1}`, lang, band, skill, text: `item ${band}-${i}`, order: i })
+      items.push({ id: `${lang}-${stage}-${skill}-${i + 1}`, lang, stage, skill, text: `item ${stage}-${i}`, order: i })
     }
   })
   return items
@@ -34,72 +32,140 @@ function checkedSet(items: CanDoItem[], pick: (item: CanDoItem) => boolean): Set
   return new Set(items.filter(pick).map((i) => i.id))
 }
 
-describe('computeAttainment(到達年齢相当の算出)', () => {
-  it('仕様の例:6-8歳帯まで全チェック、9-11歳帯は4項目中2項目 → 10.5歳相当', () => {
+/** allSkillGaps/recommendedActions 用の checks 配列({itemId, achievedOn}) */
+function checksFor(items: CanDoItem[], pick: (item: CanDoItem) => boolean, date = '2025-01-01') {
+  return items.filter(pick).map((i) => ({ itemId: i.id, achievedOn: date }))
+}
+
+function ml(lang: Lang, role: MemberLanguage['role'], targetStage: number, extra: Partial<MemberLanguage> = {}): MemberLanguage {
+  return { lang, role, targetStage, pace: 1, ...extra }
+}
+
+function member(over: Partial<Member> = {}): Member {
+  return {
+    id: 'm1',
+    name: 'テスト',
+    kind: 'child',
+    birthDate: '2017-01-01',
+    languages: [ml('en', 'native', 6)],
+    ...over,
+  }
+}
+
+describe('computeLevel(到達レベルの算出・段階幅1.0)', () => {
+  it('S3まで完了+S4を半分 → level 3.5', () => {
     const items = makeItems([2, 2, 2, 4, 2, 2])
-    const checked = checkedSet(items, (i) => i.band <= 2 || (i.band === 3 && i.order < 2))
-    const a = computeAttainment(items, checked, 10)
-    expect(a.attained).toBeCloseTo(10.5, 5)
-    expect(a.warningBands).toEqual([])
+    const checked = checkedSet(items, (i) => i.stage <= 3 || (i.stage === 4 && i.order < 2))
+    const r = computeLevel(items, checked)
+    expect(r.level).toBeCloseTo(3.5, 5)
+    expect(r.warningStages).toEqual([])
   })
 
-  it('チェック0件は未記録(遅れとは区別)', () => {
+  it('チェック0件は未記録(level=null)', () => {
     const items = makeItems([2, 2, 2])
-    const a = computeAttainment(items, new Set(), 7)
-    expect(a.attained).toBeNull()
-    expect(a.status).toBe('unrecorded')
-    expect(a.gapMonths).toBeNull()
+    const r = computeLevel(items, new Set())
+    expect(r.level).toBeNull()
+    expect(r.checkedCount).toBe(0)
   })
 
-  it('最初の帯が進行中:0-2歳帯で半分チェック → 1.5歳相当', () => {
+  it('最初の段階が進行中:S1を半分 → level 0.5', () => {
     const items = makeItems([4])
     const checked = checkedSet(items, (i) => i.order < 2)
-    const a = computeAttainment(items, checked, 1)
-    expect(a.attained).toBeCloseTo(1.5, 5)
+    expect(computeLevel(items, checked).level).toBeCloseTo(0.5, 5)
   })
 
-  it('帯が飛んでいる場合:上位帯を尊重しつつ下位の未完了帯を警告する', () => {
+  it('段階が飛んでいる場合:上位段を尊重しつつ下位の未完了段を警告する', () => {
     const items = makeItems([2, 2, 2, 2])
-    // 0-2歳帯は完了、3-5歳帯は未完了(1/2)、9-11歳帯に1つチェック
+    // S1完了、S2半分(1/2)、S4に1つチェック
     const checked = checkedSet(
       items,
-      (i) => i.band === 0 || (i.band === 1 && i.order === 0) || (i.band === 3 && i.order === 0),
+      (i) => i.stage === 1 || (i.stage === 2 && i.order === 0) || (i.stage === 4 && i.order === 0),
     )
-    const a = computeAttainment(items, checked, 10)
-    expect(a.warningBands).toContain(1)
-    expect(a.warningBands).toContain(2)
-    // 9-11歳帯(9歳始まり・3年幅)の半分 → 9 + 0.5*3 = 10.5
-    expect(a.attained).toBeCloseTo(10.5, 5)
+    const r = computeLevel(items, checked)
+    expect(r.warningStages).toContain(2)
+    expect(r.warningStages).toContain(3)
+    // h=S4(0.5)→ level 3 + 0.5 = 3.5
+    expect(r.level).toBeCloseTo(3.5, 5)
   })
 
-  it('全帯完了なら19歳相当で頭打ち', () => {
+  it('全段階完了なら level 6 で頭打ち', () => {
     const items = makeItems([1, 1, 1, 1, 1, 1])
-    const a = computeAttainment(items, checkedSet(items, () => true), 18)
-    expect(a.attained).toBe(19)
+    expect(computeLevel(items, checkedSet(items, () => true)).level).toBe(6)
+  })
+})
+
+describe('expectedChildNativeLevel(実年齢→期待レベルの補間)', () => {
+  it('age 0 → 0', () => {
+    expect(expectedChildNativeLevel(0)).toBe(0)
+  })
+  it('age 9 は S3 の始点 → level 2.0', () => {
+    expect(expectedChildNativeLevel(9)).toBeCloseTo(2.0, 5)
+  })
+  it('age 10.5 は S3 の中間 → 2 + 0.5 = 2.5', () => {
+    // S3: ageStart9, ageEnd12 → frac=(10.5-9)/3=0.5 → 2.5
+    expect(expectedChildNativeLevel(10.5)).toBeCloseTo(2.5, 5)
+  })
+  it('大人相当(age 25)は上限の 6', () => {
+    expect(expectedChildNativeLevel(25)).toBe(6)
+  })
+})
+
+describe('assessProgress(進捗判定)', () => {
+  const today = '2026-01-01'
+
+  it('未記録:level=null → unrecorded', () => {
+    const r = assessProgress({ level: null, ml: ml('en', 'foreign1', 5), member: member(), firstCheckOn: null, today })
+    expect(r.status).toBe('unrecorded')
+    expect(r.progressRatio).toBeNull()
   })
 
-  it('判定ペース係数:ゆるめ(0.75)は期待値が実年齢×0.75になる', () => {
-    const items = makeItems([2, 2, 2, 4, 2, 2])
-    const checked = checkedSet(items, (i) => i.band <= 2 || (i.band === 3 && i.order < 2))
-    // 到達10.5歳。実年齢13歳なら標準では-30ヶ月(要注意)だが、
-    // ゆるめでは期待値 13×0.75=9.75歳 → +9ヶ月で先行になる
-    expect(computeAttainment(items, checked, 13).status).toBe('attention')
-    const relaxed = computeAttainment(items, checked, 13, 0.75)
-    expect(relaxed.status).toBe('ahead')
-    expect(relaxed.gapMonths).toBe(9)
-    // 到達年齢相当そのものはペースの影響を受けない
-    expect(relaxed.attained).toBeCloseTo(10.5, 5)
+  it('目標到達:level >= targetStage → achieved', () => {
+    const r = assessProgress({ level: 5, ml: ml('en', 'foreign1', 5), member: member({ kind: 'adult', birthDate: null }), firstCheckOn: null, today })
+    expect(r.status).toBe('achieved')
   })
 
-  it('ステータス4段階+月数換算', () => {
-    const items = makeItems([2, 2, 2, 4, 2, 2])
-    const checked = checkedSet(items, (i) => i.band <= 2 || (i.band === 3 && i.order < 2))
-    // 到達10.5歳
-    expect(computeAttainment(items, checked, 10).status).toBe('ahead') // +6ヶ月
-    expect(computeAttainment(items, checked, 10.6).status).toBe('onTrack')
-    expect(computeAttainment(items, checked, 11.5).status).toBe('slightBehind') // -12ヶ月
-    expect(computeAttainment(items, checked, 13).status).toBe('attention') // -30ヶ月
-    expect(computeAttainment(items, checked, 11.17).gapMonths).toBe(-8) // 約8ヶ月遅れ
+  it('子供の母語トラック:実年齢の期待レベルと比較する', () => {
+    // birthDate 2017-01-01, today 2026-01-01 → age≒9 → expected≒2.0
+    const child = member({ kind: 'child', birthDate: '2017-01-01' })
+    const nativeMl = ml('en', 'native', 6)
+    expect(assessProgress({ level: 3, ml: nativeMl, member: child, firstCheckOn: null, today }).status).toBe('ahead')
+    expect(assessProgress({ level: 2, ml: nativeMl, member: child, firstCheckOn: null, today }).status).toBe('onTrack')
+    expect(assessProgress({ level: 1, ml: nativeMl, member: child, firstCheckOn: null, today }).status).toBe('attention')
+  })
+
+  it('目標時期あり:経過時間比と進捗比を突き合わせる', () => {
+    const adult = member({ kind: 'adult', birthDate: null })
+    const withDate = ml('en', 'foreign1', 6, { targetDate: '2027-01-01' })
+    const firstCheckOn = '2025-01-01' // 目標まで2年、today は中間(1年経過→timeRatio 0.5)
+    expect(assessProgress({ level: 3, ml: withDate, member: adult, firstCheckOn, today }).status).toBe('onTrack') // progress 0.5
+    expect(assessProgress({ level: 5, ml: withDate, member: adult, firstCheckOn, today }).status).toBe('ahead') // progress 0.83
+    expect(assessProgress({ level: 1, ml: withDate, member: adult, firstCheckOn, today }).status).toBe('attention') // progress 0.17
+  })
+
+  it('目標時期を過ぎて未達 → attention', () => {
+    const adult = member({ kind: 'adult', birthDate: null })
+    const withDate = ml('en', 'foreign1', 6, { targetDate: '2025-06-01' })
+    expect(assessProgress({ level: 3, ml: withDate, member: adult, firstCheckOn: '2025-01-01', today }).status).toBe('attention')
+  })
+
+  it('目標時期なし:記録があれば onTrack', () => {
+    const adult = member({ kind: 'adult', birthDate: null })
+    expect(assessProgress({ level: 2, ml: ml('en', 'foreign1', 6), member: adult, firstCheckOn: '2025-01-01', today }).status).toBe('onTrack')
+  })
+})
+
+describe('firstCheckOnFor(言語ごとの最初の達成日)', () => {
+  const checks = [
+    { itemId: 'en-2-reading-1', achievedOn: '2025-03-01' },
+    { itemId: 'en-1-reading-1', achievedOn: '2025-01-01' },
+    { itemId: 'zh-1-reading-1', achievedOn: '2024-12-01' },
+  ]
+  it('該当言語の最小 achievedOn を返す', () => {
+    expect(firstCheckOnFor(checks, 'en')).toBe('2025-01-01')
+    expect(firstCheckOnFor(checks, 'zh')).toBe('2024-12-01')
+  })
+  it('該当がなければ null', () => {
+    expect(firstCheckOnFor(checks, 'ja')).toBeNull()
   })
 })
 
@@ -117,63 +183,65 @@ describe('checkedIdsAsOf(過去時点の再構成)', () => {
   })
 })
 
+describe('matchMaterials(言語×技能×段階×対象者)', () => {
+  const materials: Material[] = [
+    { id: 'a', title: 'A', type: 'book', languages: ['en'], skills: ['reading'], stages: [1, 2], audience: 'child', origin: 'local' },
+    { id: 'b', title: 'B', type: 'app', languages: ['en'], skills: ['listening'], stages: [1, 2], audience: 'all', origin: 'local' },
+    { id: 'c', title: 'C', type: 'book', languages: ['en'], skills: ['reading'], stages: [4, 5], audience: 'child', origin: 'local' },
+    { id: 'd', title: 'D', type: 'book', languages: ['en'], skills: ['reading'], stages: [1, 2], audience: 'adult', origin: 'japan' },
+  ]
+  it('段階が重なる子供向け/共通の教材のみマッチ', () => {
+    const hit = matchMaterials(materials, 'en', 'reading', [2], 'child')
+    expect(hit.map((m) => m.id)).toEqual(['a'])
+  })
+  it('大人には大人向け/共通がマッチ(子供向けは除外)', () => {
+    const hit = matchMaterials(materials, 'en', 'reading', [2], 'adult')
+    expect(hit.map((m) => m.id)).toEqual(['d'])
+  })
+})
+
 describe('generatePlan(キャッチアッププラン生成)', () => {
   const materials: Material[] = [
-    { id: 'm1', title: '幼児向け絵本', type: 'book', languages: ['en'], skills: ['reading'], ageRange: [0, 5] },
-    { id: 'm2', title: '多読セット', type: 'book', languages: ['en'], skills: ['reading'], ageRange: [6, 9] },
-    { id: 'm3', title: '中国語アプリ', type: 'app', languages: ['zh'], skills: ['reading'], ageRange: [0, 18] },
+    { id: 'm1', title: '入門絵本', type: 'book', languages: ['en'], skills: ['reading'], stages: [1], audience: 'all', origin: 'local' },
+    { id: 'm2', title: '多読セット', type: 'book', languages: ['en'], skills: ['reading'], stages: [2, 3], audience: 'all', origin: 'local' },
+    { id: 'm3', title: '韓国語アプリ', type: 'app', languages: ['ko'], skills: ['reading'], stages: [1, 2, 3, 4, 5, 6], audience: 'all', origin: 'local' },
   ]
 
-  it('未チェック項目を年齢帯順にタスク化し、教材と期間を割り当てる', () => {
+  it('未チェック項目を段階順にタスク化し、教材と期間を割り当てる', () => {
     const items = makeItems([2, 2, 2])
-    const checked = checkedSet(items, (i) => i.band === 0)
-    const plan = generatePlan('en', 'reading', items, checked, 7, materials, 6)
-    expect(plan.length).toBe(2) // 3-5歳帯と6-8歳帯
-    expect(plan[0].items.every((i) => i.band === 1)).toBe(true)
-    expect(plan[1].materials.map((m) => m.id)).toContain('m2')
+    const checked = checkedSet(items, (i) => i.stage === 1)
+    const plan = generatePlan('en', 'reading', items, checked, 3, materials, 'child', 6)
+    expect(plan.length).toBe(2) // S2 と S3
+    expect(plan[0].items.every((i) => i.stage === 2)).toBe(true)
+    expect(plan[0].materials.map((m) => m.id)).toContain('m2')
     // 言語違いの教材は混ざらない
     expect(plan.flatMap((s) => s.materials).some((m) => m.id === 'm3')).toBe(false)
-    // 期間はステップに配分される(合計≒targetMonths)
     const total = plan.reduce((a, s) => a + s.months, 0)
     expect(total).toBeGreaterThanOrEqual(4)
     expect(total).toBeLessThanOrEqual(8)
   })
 
-  it('実年齢帯より上の項目はプランに含めない', () => {
+  it('targetStage より上の段階はプランに含めない', () => {
     const items = makeItems([2, 2, 2, 2, 2, 2])
-    const plan = generatePlan('en', 'reading', items, new Set(), 7, materials, 6)
-    expect(plan.every((s) => s.items.every((i) => i.band <= 2))).toBe(true)
+    const plan = generatePlan('en', 'reading', items, new Set(), 3, materials, 'child', 6)
+    expect(plan.every((s) => s.items.every((i) => i.stage <= 3))).toBe(true)
   })
 
   it('ステップは最大4つにまとめられる', () => {
     const items = makeItems([2, 2, 2, 2, 2, 2])
-    const plan = generatePlan('en', 'reading', items, new Set(), 17, materials, 12)
+    const plan = generatePlan('en', 'reading', items, new Set(), 6, materials, 'child', 12)
     expect(plan.length).toBeLessThanOrEqual(4)
   })
 
   it('未チェックがなければ空プラン', () => {
     const items = makeItems([2, 2])
-    const plan = generatePlan('en', 'reading', items, checkedSet(items, () => true), 5, materials, 6)
+    const plan = generatePlan('en', 'reading', items, checkedSet(items, () => true), 2, materials, 'child', 6)
     expect(plan).toEqual([])
   })
 })
 
-describe('matchMaterials', () => {
-  it('言語×技能×年齢帯でマッチングする', () => {
-    const materials: Material[] = [
-      { id: 'a', title: 'A', type: 'book', languages: ['en'], skills: ['reading'], ageRange: [0, 5] },
-      { id: 'b', title: 'B', type: 'app', languages: ['en'], skills: ['listening'], ageRange: [0, 5] },
-      { id: 'c', title: 'C', type: 'book', languages: ['en'], skills: ['reading'], ageRange: [10, 15] },
-    ]
-    const hit = matchMaterials(materials, 'en', 'reading', [3, 5])
-    expect(hit.map((m) => m.id)).toEqual(['a'])
-  })
-})
-
-describe('allSkillGaps(全言語×技能のギャップ抽出)', () => {
-  // en-reading: 0-8歳帯完了+9-11歳帯半分 → 到達10.5歳(既存テストと同じ形)
-  // en-listening: 全帯完了 → 到達19歳(頭打ち)
-  // zh-reading / ja-reading: 未チェック → unrecorded
+describe('allSkillGaps(メンバー言語×技能のギャップ抽出)', () => {
+  // en: native(子供母語)。reading は S3.5、listening は完了(達成)。zh: foreign1 未記録。ja は対象外。
   function buildItems(): CanDoItem[] {
     return [
       ...makeItemsFor('en', 'reading', [2, 2, 2, 4, 2, 2]),
@@ -182,74 +250,59 @@ describe('allSkillGaps(全言語×技能のギャップ抽出)', () => {
       ...makeItemsFor('ja', 'reading', [2, 2, 2, 4, 2, 2]),
     ]
   }
-
-  function buildChecked(items: CanDoItem[]): Set<string> {
-    return checkedSet(items, (i) => {
-      if (i.lang === 'en' && i.skill === 'reading') return i.band <= 2 || (i.band === 3 && i.order < 2)
+  function buildChecks(items: CanDoItem[]) {
+    return checksFor(items, (i) => {
+      if (i.lang === 'en' && i.skill === 'reading') return i.stage <= 3 || (i.stage === 4 && i.order < 2)
       if (i.lang === 'en' && i.skill === 'listening') return true
-      return false // zh-reading, ja-reading は未チェックのまま
+      return false
     })
   }
+  // 18歳相当の子供(expected≒4.75)。en-reading(3.5) は母語期待を大きく下回り attention
+  const testMember = member({
+    kind: 'child',
+    birthDate: '2008-01-01',
+    languages: [ml('en', 'native', 6), ml('zh', 'foreign1', 5)],
+  })
 
-  it('指定した langs のみが対象になる', () => {
+  it('メンバーの言語構成にある言語のみが対象になる', () => {
     const items = buildItems()
-    const checked = buildChecked(items)
-    const gaps = allSkillGaps(items, checked, 13, ['en', 'zh'])
+    const gaps = allSkillGaps(items, buildChecks(items), testMember, '2026-01-01')
     // en-reading, en-listening, zh-reading の3件(ja は対象外)
     expect(gaps.length).toBe(3)
     expect(gaps.every((g) => g.lang === 'en' || g.lang === 'zh')).toBe(true)
-    expect(gaps.some((g) => g.lang === ('ja' as Lang))).toBe(false)
   })
 
   it('悪いステータス(attention)が先頭に来る', () => {
     const items = buildItems()
-    const checked = buildChecked(items)
-    const gaps = allSkillGaps(items, checked, 13, ['en', 'zh'])
-    // en-reading: 到達10.5歳、実年齢13歳 → -30ヶ月で attention
+    const gaps = allSkillGaps(items, buildChecks(items), testMember, '2026-01-01')
     expect(gaps[0].lang).toBe('en')
     expect(gaps[0].skill).toBe('reading')
-    expect(gaps[0].attainment.status).toBe('attention')
-  })
-
-  it('paces で緩めた言語のステータスが改善する', () => {
-    const items = buildItems()
-    const checked = buildChecked(items)
-
-    const strict = allSkillGaps(items, checked, 13, ['en', 'zh'])
-    const enReadingStrict = strict.find((g) => g.lang === 'en' && g.skill === 'reading')
-    expect(enReadingStrict?.attainment.status).toBe('attention')
-
-    // langs=['en','zh'] に対して paces=[0.5,1] → en の期待値が 13×0.5=6.5歳 に緩む
-    const relaxed = allSkillGaps(items, checked, 13, ['en', 'zh'], [0.5, 1])
-    const enReadingRelaxed = relaxed.find((g) => g.lang === 'en' && g.skill === 'reading')
-    expect(enReadingRelaxed?.attainment.status).toBe('ahead')
-    // 到達年齢相当そのものは変わらない
-    expect(enReadingRelaxed?.attainment.attained).toBeCloseTo(10.5, 5)
+    expect(gaps[0].status).toBe('attention')
   })
 })
 
 describe('recommendedActions(直近の推奨アクション抽出)', () => {
   it('count 件以下を返す', () => {
-    // 4技能すべて未チェック → 4件のギャップが並ぶが、count=2に制限される
-    const items: CanDoItem[] = [
+    const items = [
       ...makeItemsFor('en', 'listening', [2, 2]),
       ...makeItemsFor('en', 'speaking', [2, 2]),
       ...makeItemsFor('en', 'reading', [2, 2]),
       ...makeItemsFor('en', 'writing', [2, 2]),
     ]
-    const actions = recommendedActions(items, new Set(), 5, ['en'], [1], 2)
+    const m = member({ kind: 'adult', birthDate: null, languages: [ml('en', 'foreign1', 5)] })
+    const actions = recommendedActions(items, [], m, '2026-01-01', 2)
     expect(actions.length).toBeLessThanOrEqual(2)
   })
 
-  it('返る item はその言語×技能の最初(band・order最小)の未チェック項目である', () => {
+  it('返る item はその言語×技能の最初(stage・order最小)の未チェック項目である', () => {
     const items = makeItemsFor('en', 'reading', [2, 2, 2, 4, 2, 2])
-    // 0-8歳帯完了、9-11歳帯(band3)は前半2件のみ完了 → 残りは band3 の order2以降から
-    const checked = checkedSet(items, (i) => i.band <= 2 || (i.band === 3 && i.order < 2))
-    const actions = recommendedActions(items, checked, 13, ['en'], [1], 1)
+    const checks = checksFor(items, (i) => i.stage <= 3 || (i.stage === 4 && i.order < 2))
+    const m = member({ kind: 'child', birthDate: '2008-01-01', languages: [ml('en', 'native', 6)] })
+    const actions = recommendedActions(items, checks, m, '2026-01-01', 1)
     expect(actions.length).toBe(1)
     expect(actions[0].lang).toBe('en')
     expect(actions[0].skill).toBe('reading')
-    expect(actions[0].item.band).toBe(3)
+    expect(actions[0].item.stage).toBe(4)
     expect(actions[0].item.order).toBe(2)
     expect(actions[0].status).toBe('attention')
   })

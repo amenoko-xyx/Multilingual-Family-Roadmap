@@ -1,8 +1,20 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import type { Lang, Skill } from '../types'
+import { STAGES, type Lang, type Skill } from '../types'
 import type { Status } from '../lib/logic'
 import { T } from '../i18n'
 import { useApp } from '../context/AppContext'
+
+/** 段階見出し(例: `S3・初中級`)。idx は STAGES.idx(1〜6) */
+export function stageLabel(idx: number): string {
+  const s = STAGES.find((x) => x.idx === idx)
+  return s ? `S${s.idx}・${s.name}` : `S${idx}`
+}
+
+/** 段階見出し+年齢目安(例: `S3・初中級(母語話者の9〜11歳相当)`) */
+export function stageLabelWithAge(idx: number): string {
+  const s = STAGES.find((x) => x.idx === idx)
+  return s ? `${stageLabel(idx)}(母語話者の${s.ageHint}相当)` : `S${idx}`
+}
 
 /** Material Symbols アイコン(装飾用。意味はラベル併記で伝える) */
 export function Icon({ name, className = '' }: { name: string; className?: string }) {
@@ -246,6 +258,7 @@ export function SkillLabel({ skill, className = '' }: { skill: Skill; className?
 }
 
 const STATUS_STYLE: Record<Status, { cls: string; icon: string }> = {
+  achieved: { cls: 'bg-emerald-600 text-white border-emerald-600', icon: 'verified' },
   ahead: { cls: 'bg-sky-50 text-sky-700 border-sky-200', icon: 'trending_up' },
   onTrack: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: 'check_circle' },
   slightBehind: { cls: 'bg-amber-50 text-amber-700 border-amber-200', icon: 'trending_down' },

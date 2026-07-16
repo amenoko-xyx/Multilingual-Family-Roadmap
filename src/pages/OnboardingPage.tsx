@@ -3,43 +3,51 @@ import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { addCheck, db, removeCheck, uid } from '../db'
 import { useApp } from '../context/AppContext'
-import { BANDS, SKILLS, type CanDoItem, type Lang } from '../types'
-import { ageAt, minBirthDateStr, todayStr } from '../lib/dates'
-import { bandOfAge } from '../lib/logic'
-import { Card, GeoBanner, Icon, LangChip, PrimaryButton, ProgressBar, SkillLabel } from '../components/ui'
+import { DEFAULT_MEMBER_LANGS, SKILLS, STAGES, type CanDoItem, type Lang } from '../types'
+import { minBirthDateStr, todayStr } from '../lib/dates'
+import { Card, GeoBanner, Icon, LangChip, PrimaryButton, ProgressBar, Segmented, SkillLabel, stageLabelWithAge } from '../components/ui'
 import { T } from '../i18n'
 
-const STEPS = ['お子さんの情報', 'いまのようす', '完了'] as const
+const STEPS = ['メンバーの情報', 'いまのようす', '完了'] as const
 
 /**
- * オンボーディング:子供の登録 →「いまできること」の初期チェック → 完了。
+ * オンボーディング:メンバー(大人・子供)の登録 →「いまできること」の初期チェック → 完了。
  * - 現在ステップを常に表示(ニールセン: システム状態の可視化)
  * - 初期チェックはスキップ可能・後から変更可能(ニールセン: ユーザーの主導権と柔軟性)
- * - OOUI: まず「子供」というオブジェクトを作り、そのオブジェクトに記録を紐づけていく流れ
+ * - OOUI: まず「メンバー」というオブジェクトを作り、そのオブジェクトに記録を紐づけていく流れ
  */
 export default function OnboardingPage() {
-  const { children_, selectChild, showToast } = useApp()
+  const { members, selectMember, showToast } = useApp()
   const navigate = useNavigate()
-  const isFirst = children_.length === 0
+  const isFirst = members.length === 0
   const [step, setStep] = useState(0)
-  const [childId, setChildId] = useState<string | null>(null)
+  const [memberId, setMemberId] = useState<string | null>(null)
 
   // Step 0 フォーム
   const [name, setName] = useState('')
+  const [kind, setKind] = useState<'adult' | 'child'>('child')
   const [birthDate, setBirthDate] = useState('')
   const [note, setNote] = useState('')
 
-  const createChild = async () => {
-    if (!name.trim() || !birthDate) return
-    // エラーの防止:0〜100歳を想定した範囲チェック(西暦の入力ミス対策)
-    if (birthDate < minBirthDateStr() || birthDate > todayStr()) {
+  const createMember = async () => {
+    if (!name.trim()) return
+    // 子供は生年月日必須。大人は任意(入力時のみ範囲チェック)
+    if (kind === 'child' && !birthDate) return
+    if (birthDate && (birthDate < minBirthDateStr() || birthDate > todayStr())) {
       showToast({ message: '生年月日を確認してください(0〜100歳を想定しています)' })
       return
     }
     const id = uid()
-    await db.children.put({ id, name: name.trim(), birthDate, note: note.trim() || undefined })
-    selectChild(id)
-    setChildId(id)
+    await db.members.put({
+      id,
+      name: name.trim(),
+      kind,
+      birthDate: birthDate || null,
+      note: note.trim() || undefined,
+      languages: DEFAULT_MEMBER_LANGS,
+    })
+    selectMember(id)
+    setMemberId(id)
     setStep(1)
   }
 
@@ -70,15 +78,28 @@ export default function OnboardingPage() {
               <GeoBanner className="mb-4 h-20" />
               <h2 className="mt-2 text-lg font-bold text-neutral-900">ようこそ {T.appName} へ</h2>
               <p className="mt-1 text-sm leading-relaxed text-neutral-500">
-                選んだ言語の18年ロードマップで、お子さんの「できた」を記録していくアプリです。
-                まずお子さんを登録しましょう。
+                選んだ言語のレベル段階ロードマップで、家族の「できた」を記録していくアプリです。
+                まずメンバーを登録しましょう。
               </p>
             </div>
           )}
           {!isFirst && (
-            <h2 className="mb-4 text-lg font-bold text-neutral-900">お子さんを追加</h2>
+            <h2 className="mb-4 text-lg font-bold text-neutral-900">メンバーを追加</h2>
           )}
           <div className="space-y-3">
+            <div className="text-sm text-neutral-600">
+              区分
+              <div className="mt-1">
+                <Segmented<'adult' | 'child'>
+                  value={kind}
+                  onChange={setKind}
+                  options={[
+                    { value: 'child', label: '子供' },
+                    { value: 'adult', label: '大人' },
+                  ]}
+                />
+              </div>
+            </div>
             <label className="block text-sm text-neutral-600">
               名前(ニックネーム可)<span className="ml-1 text-rose-500">*</span>
               <input
@@ -89,7 +110,7 @@ export default function OnboardingPage() {
               />
             </label>
             <label className="block text-sm text-neutral-600">
-              生年月日<span className="ml-1 text-rose-500">*</span>
+              生年月日{kind === 'child' ? <span className="ml-1 text-rose-500">*</span> : <span className="ml-1 text-neutral-400">(任意)</span>}
               <input
                 type="date"
                 value={birthDate}
@@ -108,7 +129,7 @@ export default function OnboardingPage() {
                 className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-sm"
               />
             </label>
-            <PrimaryButton onClick={createChild} disabled={!name.trim() || !birthDate} className="w-full">
+            <PrimaryButton onClick={createMember} disabled={!name.trim() || (kind === 'child' && !birthDate)} className="w-full">
               次へ:いまのようすを記録
             </PrimaryButton>
             {!isFirst && (
@@ -120,48 +141,45 @@ export default function OnboardingPage() {
         </Card>
       )}
 
-      {step === 1 && childId && (
-        <AssessmentStep childId={childId} childName={name} onDone={() => setStep(2)} />
+      {step === 1 && memberId && (
+        <AssessmentStep memberId={memberId} memberName={name} onDone={() => setStep(2)} />
       )}
 
-      {step === 2 && childId && <DoneStep childId={childId} childName={name} />}
+      {step === 2 && memberId && <DoneStep memberId={memberId} memberName={name} />}
     </div>
   )
 }
 
 /* ---------- Step 2: いまのようすチェック ---------- */
 
-function AssessmentStep({ childId, childName, onDone }: { childId: string; childName: string; onDone: () => void }) {
+function AssessmentStep({ memberId, memberName, onDone }: { memberId: string; memberName: string; onDone: () => void }) {
   const { langs } = useApp()
   const items = useLiveQuery(() => db.items.toArray(), [], undefined)
   const cells = useLiveQuery(() => db.cells.toArray(), [], undefined)
-  const checks = useLiveQuery(() => db.checks.where('childId').equals(childId).toArray(), [childId], undefined)
-  const child = useLiveQuery(() => db.children.get(childId), [childId])
+  const checks = useLiveQuery(() => db.checks.where('memberId').equals(memberId).toArray(), [memberId], undefined)
   // 言語は第一→第二→第三の順に強制的に入力する(タブでの自由移動はしない)
   const [langIdx, setLangIdx] = useState(0)
-  // 言語ごとの確認開始帯。未定義=まだ自己申告していない(自己申告画面を表示)
-  const [startBands, setStartBands] = useState<Record<string, number>>({})
+  // 言語ごとの確認開始段階。未定義=まだ自己申告していない(自己申告画面を表示)
+  const [startStages, setStartStages] = useState<Record<string, number>>({})
   const lang: Lang = langs[langIdx]
   const isLast = langIdx === langs.length - 1
-  const startBand = startBands[lang] as number | undefined
+  const startStage = startStages[lang] as number | undefined
 
   const checkedIds = useMemo(() => new Set((checks ?? []).map((c) => c.itemId)), [checks])
 
-  if (items === undefined || cells === undefined || checks === undefined || !child) return null
+  if (items === undefined || cells === undefined || checks === undefined) return null
 
-  const curBand = bandOfAge(ageAt(child.birthDate, todayStr()))
-  const langItems = (l: Lang) => items.filter((i) => i.lang === l && i.band <= curBand)
-  const langChecked = (l: Lang) => langItems(l).filter((i) => checkedIds.has(i.id)).length
-  const benchmarkOf = (l: Lang, band: number) => cells.find((c) => c.lang === l && c.band === band)?.benchmark
+  const langChecked = (l: Lang) => items.filter((i) => i.lang === l && checkedIds.has(i.id)).length
+  const benchmarkOf = (l: Lang, stage: number) => cells.find((c) => c.lang === l && c.stage === stage)?.benchmarks.foreign
 
-  // 自己申告:選んだ帯の1つ下から確認を始め、それより前の項目は達成済みとして記録する
-  const chooseLevel = async (band: number | null) => {
-    const start = band === null ? 0 : Math.max(0, band - 1)
-    if (start > 0) {
-      const toCheck = items.filter((i) => i.lang === lang && i.band < start && !checkedIds.has(i.id))
-      for (const it of toCheck) await addCheck(childId, it.id, todayStr())
+  // 自己申告:選んだ段階の1つ下から確認を始め、それより前の項目は達成済みとして記録する
+  const chooseLevel = async (stage: number | null) => {
+    const start = stage === null ? 1 : Math.max(1, stage - 1)
+    if (start > 1) {
+      const toCheck = items.filter((i) => i.lang === lang && i.stage < start && !checkedIds.has(i.id))
+      for (const it of toCheck) await addCheck(memberId, it.id, todayStr())
     }
-    setStartBands((s) => ({ ...s, [lang]: start }))
+    setStartStages((s) => ({ ...s, [lang]: start }))
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -177,14 +195,14 @@ function AssessmentStep({ childId, childName, onDone }: { childId: string; child
   }
 
   const toggle = (item: CanDoItem) => {
-    if (checkedIds.has(item.id)) return removeCheck(childId, item.id)
-    return addCheck(childId, item.id, todayStr())
+    if (checkedIds.has(item.id)) return removeCheck(memberId, item.id)
+    return addCheck(memberId, item.id, todayStr())
   }
 
   return (
     <div className="space-y-4">
       <Card className="p-5">
-        <h2 className="text-lg font-bold text-neutral-900">{childName}さんの「いまできること」</h2>
+        <h2 className="text-lg font-bold text-neutral-900">{memberName}さんの「いまできること」</h2>
         <p className="mt-1 text-sm leading-relaxed text-neutral-500">
           言語ごとに「いまどのくらいか」をざっくり選ぶと、その少し下のレベルから確認を始めます。
           正確でなくて大丈夫です。<strong className="font-semibold text-neutral-600">あとからいつでも変更できます。</strong>
@@ -217,7 +235,7 @@ function AssessmentStep({ childId, childName, onDone }: { childId: string; child
       </ol>
 
       {/* フェーズ1: 自己申告(レベルをざっくり選ぶ) */}
-      {startBand === undefined && (
+      {startStage === undefined && (
         <Card className="overflow-hidden">
           <div className="flex items-center gap-2.5 border-b border-neutral-100 bg-neutral-50/60 px-4 py-3">
             <LangChip lang={lang} />
@@ -231,31 +249,31 @@ function AssessmentStep({ childId, childName, onDone }: { childId: string; child
               <Icon name="flag" className="text-lg text-neutral-400" />
               <span className="text-sm font-medium text-neutral-800">まだ始めていない・最初から確認する</span>
             </button>
-            {BANDS.filter((b) => b.idx <= curBand).map((band) => (
+            {STAGES.map((stage) => (
               <button
-                key={band.idx}
-                onClick={() => chooseLevel(band.idx)}
+                key={stage.idx}
+                onClick={() => chooseLevel(stage.idx)}
                 className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-left transition-colors hover:border-brand-400 hover:bg-brand-50/40"
               >
-                <span className="text-sm font-semibold text-neutral-800">{band.label}くらい</span>
-                {benchmarkOf(lang, band.idx) && (
-                  <span className="mt-0.5 block text-xs leading-relaxed text-neutral-500">{benchmarkOf(lang, band.idx)}</span>
+                <span className="text-sm font-semibold text-neutral-800">{stageLabelWithAge(stage.idx)}くらい</span>
+                {benchmarkOf(lang, stage.idx) && (
+                  <span className="mt-0.5 block text-xs leading-relaxed text-neutral-500">{benchmarkOf(lang, stage.idx)}</span>
                 )}
               </button>
             ))}
           </div>
           <p className="border-t border-neutral-100 px-4 py-3 text-xs leading-relaxed text-neutral-400">
-            選んだ年齢帯の1つ下から確認を始めます。それより前の項目は「できる」として記録します(あとから個別に取り消せます)。
+            選んだ段階の1つ下から確認を始めます。それより前の項目は「できる」として記録します(あとから個別に取り消せます)。
           </p>
         </Card>
       )}
 
       {/* フェーズ2: チェックリストで確認 */}
-      {startBand !== undefined && startBand > 0 && (
+      {startStage !== undefined && startStage > 1 && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-neutral-100 px-3 py-2 text-xs text-neutral-500">
-          <span>{BANDS[startBand].label}から確認しています(それ以前は達成済みとして記録済み)</span>
+          <span>{stageLabelWithAge(startStage)}から確認しています(それ以前は達成済みとして記録済み)</span>
           <button
-            onClick={() => setStartBands((s) => ({ ...s, [lang]: 0 }))}
+            onClick={() => setStartStages((s) => ({ ...s, [lang]: 1 }))}
             className="font-medium text-brand-600 underline decoration-brand-300 underline-offset-2"
           >
             最初のレベルから確認する
@@ -263,19 +281,19 @@ function AssessmentStep({ childId, childName, onDone }: { childId: string; child
         </div>
       )}
 
-      {startBand !== undefined && BANDS.filter((b) => b.idx >= startBand && b.idx <= curBand).map((band) => {
-        const bandItems = items.filter((i) => i.lang === lang && i.band === band.idx)
-        if (bandItems.length === 0) return null
-        const done = bandItems.filter((i) => checkedIds.has(i.id)).length
+      {startStage !== undefined && STAGES.filter((s) => s.idx >= startStage).map((stage) => {
+        const stageItems = items.filter((i) => i.lang === lang && i.stage === stage.idx)
+        if (stageItems.length === 0) return null
+        const done = stageItems.filter((i) => checkedIds.has(i.id)).length
         return (
-          <Card key={band.idx} className="overflow-hidden">
+          <Card key={stage.idx} className="overflow-hidden">
             <div className="flex items-center gap-3 border-b border-neutral-100 bg-neutral-50/60 px-4 py-3">
-              <span className="text-sm font-bold text-neutral-800">{band.label}</span>
-              <ProgressBar ratio={bandItems.length ? done / bandItems.length : 0} className="flex-1" />
+              <span className="text-sm font-bold text-neutral-800">{stageLabelWithAge(stage.idx)}</span>
+              <ProgressBar ratio={stageItems.length ? done / stageItems.length : 0} className="flex-1" />
             </div>
             <div className="px-2 py-2">
               {SKILLS.map((skill) => {
-                const group = bandItems.filter((i) => i.skill === skill).sort((a, b) => a.order - b.order)
+                const group = stageItems.filter((i) => i.skill === skill).sort((a, b) => a.order - b.order)
                 if (group.length === 0) return null
                 return (
                   <div key={skill} className="border-b border-neutral-100 py-1 last:border-0">
@@ -341,10 +359,10 @@ function AssessmentStep({ childId, childName, onDone }: { childId: string; child
 
 /* ---------- Step 3: 完了 ---------- */
 
-function DoneStep({ childId, childName }: { childId: string; childName: string }) {
+function DoneStep({ memberId, memberName }: { memberId: string; memberName: string }) {
   const navigate = useNavigate()
   const { langs } = useApp()
-  const checks = useLiveQuery(() => db.checks.where('childId').equals(childId).toArray(), [childId], undefined)
+  const checks = useLiveQuery(() => db.checks.where('memberId').equals(memberId).toArray(), [memberId], undefined)
   if (checks === undefined) return null
 
   const perLang = langs.map((l) => ({
@@ -354,10 +372,10 @@ function DoneStep({ childId, childName }: { childId: string; childName: string }
 
   return (
     <Card className="space-y-5 p-6 text-center">
-      <GeoBanner className="h-20" weights={perLang.map((p) => p.count)} seed={childId} caption />
+      <GeoBanner className="h-20" weights={perLang.map((p) => p.count)} seed={memberId} caption />
       <div>
         <Icon name="celebration" className="text-4xl text-brand-500" />
-        <h2 className="mt-2 text-lg font-bold text-neutral-900">{childName}さんの登録が完了しました</h2>
+        <h2 className="mt-2 text-lg font-bold text-neutral-900">{memberName}さんの登録が完了しました</h2>
         <p className="mt-1 text-sm text-neutral-500">
           {checks.length > 0
             ? `${checks.length}項目を「できること」として記録しました。`

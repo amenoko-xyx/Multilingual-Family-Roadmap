@@ -4,54 +4,62 @@ import { Link, Navigate } from 'react-router-dom'
 import { db } from '../db'
 import { useApp } from '../context/AppContext'
 import { SKILLS, type CanDoItem, type CheckRecord } from '../types'
-import { ageAt, ageLabel, fmtDateJa, roundAge, todayStr } from '../lib/dates'
-import { computeAttainment, recommendedActions } from '../lib/logic'
+import { ageAt, ageLabel, fmtDateJa, todayStr } from '../lib/dates'
+import { allSkillGaps, recommendedActions } from '../lib/logic'
 import { Card, GeoBanner, Icon, LangChip, Modal, SectionTitle, SkillLabel, StatusBadge } from '../components/ui'
 import { CheckRow } from '../components/CheckRow'
 import { RecordSection } from '../components/RecordSection'
 
 export default function HomePage() {
-  const { selectedChild, children_, ready, langs, paces } = useApp()
+  const { selectedMember, members, ready, langs } = useApp()
   const recordSectionRef = useRef<HTMLElement>(null)
   const scrollToRecord = () => recordSectionRef.current?.scrollIntoView({ behavior: 'smooth' })
   const [historyOpen, setHistoryOpen] = useState(false)
   const items = useLiveQuery(() => db.items.toArray(), [], undefined)
   const checks = useLiveQuery(
-    () => (selectedChild ? db.checks.where('childId').equals(selectedChild.id).toArray() : Promise.resolve([] as CheckRecord[])),
-    [selectedChild?.id],
+    () => (selectedMember ? db.checks.where('memberId').equals(selectedMember.id).toArray() : Promise.resolve([] as CheckRecord[])),
+    [selectedMember?.id],
     undefined,
   )
 
   if (items === undefined || checks === undefined || !ready) return null
 
-  // OOUI: 主オブジェクト「子供」が存在しない場合はオンボーディングへ
-  if (!selectedChild && children_.length === 0) return <Navigate to="/onboarding" replace />
-  if (!selectedChild) return null
+  // OOUI: 主オブジェクト「メンバー」が存在しない場合はオンボーディングへ
+  if (!selectedMember && members.length === 0) return <Navigate to="/onboarding" replace />
+  if (!selectedMember) return null
 
-  const child = selectedChild
-  const age = ageAt(child.birthDate, todayStr())
-  const checkedIds = new Set(checks.map((c) => c.itemId))
-  const actions = recommendedActions(items, checkedIds, age, langs, paces, 3)
+  const member = selectedMember
+  const today = todayStr()
+  const age = member.birthDate ? ageAt(member.birthDate, today) : null
+  const checkByItem = new Map(checks.map((c) => [c.itemId, c]))
+  const actions = recommendedActions(items, checks, member, today, 3)
+  // 言語×技能ごとの到達レベル・ステータス(サマリー表示用)
+  const gaps = allSkillGaps(items, checks, member, today)
+  const gapByKey = new Map(gaps.map((g) => [`${g.lang}:${g.skill}`, g]))
   const recent = checks
     .slice()
     .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))
     .slice(0, 6)
   const itemById = new Map(items.map((i) => [i.id, i]))
-  const checkByItem = new Map(checks.map((c) => [c.itemId, c]))
   // グラフィックの色面積は言語ごとの達成数に連動(できている言語の色が広くなる)
   const geoWeights = langs.map((l) => checks.filter((c) => itemById.get(c.itemId)?.lang === l).length)
 
   return (
     <div className="space-y-8">
-      {/* 子供ごとに絵柄が変わるグラフィック(言語別の達成バランス+割合メモ付き) */}
-      <GeoBanner className="h-20 sm:h-24" weights={geoWeights} seed={child.id} caption />
+      {/* メンバーごとに絵柄が変わるグラフィック(言語別の達成バランス+割合メモ付き) */}
+      <GeoBanner className="h-20 sm:h-24" weights={geoWeights} seed={member.id} caption />
 
-      {/* 子供ヘッダー */}
+      {/* メンバーヘッダー */}
       <div className="flex flex-wrap items-end justify-between gap-3 !mt-5">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-neutral-900">{child.name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-900">{member.name}</h1>
           <p className="mt-0.5 text-sm text-neutral-500">
-            {ageLabel(age)}(生年月日 {fmtDateJa(child.birthDate)})・これまでの達成 {checks.length} 項目
+            {age !== null
+              ? `${ageLabel(age)}(生年月日 ${fmtDateJa(member.birthDate!)})`
+              : member.kind === 'adult'
+                ? '大人'
+                : 'メンバー'}
+            ・これまでの達成 {checks.length} 項目
           </p>
         </div>
         <div className="flex gap-2">
@@ -74,23 +82,23 @@ export default function HomePage() {
       <section>
         <SectionTitle>ステータスサマリー</SectionTitle>
         <div className="grid gap-3 sm:grid-cols-3">
-          {langs.map((lang, pos) => (
+          {langs.map((lang) => (
             <Card key={lang} className="p-4">
               <div className="mb-2 flex items-center justify-between">
                 <LangChip lang={lang} />
               </div>
               <ul className="divide-y divide-neutral-100">
                 {SKILLS.map((skill) => {
-                  const subset = items.filter((i) => i.lang === lang && i.skill === skill)
-                  const a = computeAttainment(subset, checkedIds, age, paces[pos])
+                  const g = gapByKey.get(`${lang}:${skill}`)
+                  const level = g?.result.level ?? null
                   return (
                     <li key={skill} className="flex items-center justify-between gap-2 py-2">
                       <SkillLabel skill={skill} />
                       <span className="flex items-center gap-2">
-                        {a.attained !== null && (
-                          <span className="whitespace-nowrap text-xs tabular-nums text-neutral-400">{roundAge(a.attained)}歳相当</span>
+                        {level !== null && (
+                          <span className="whitespace-nowrap text-xs tabular-nums text-neutral-400">S{level.toFixed(1)}</span>
                         )}
-                        <StatusBadge status={a.status} />
+                        <StatusBadge status={g?.status ?? 'unrecorded'} />
                       </span>
                     </li>
                   )
@@ -122,7 +130,7 @@ export default function HomePage() {
                 <CheckRow
                   item={a.item}
                   check={checkByItem.get(a.item.id)}
-                  childId={child.id}
+                  memberId={member.id}
                   showMeta={
                     <>
                       <SkillLabel skill={a.skill} />

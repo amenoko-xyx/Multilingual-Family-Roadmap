@@ -24,27 +24,27 @@ const PAGE_TITLE: Record<string, string> = {
   '/plan': T.nav.plan,
   '/compare': T.nav.compare,
   '/settings': T.nav.settings,
-  '/onboarding': 'お子さんの登録',
+  '/onboarding': 'メンバーの登録',
 }
 
-function ChildSwitcher() {
-  const { children_, selectedChild, selectChild } = useApp()
+function MemberSwitcher() {
+  const { members, selectedMember, selectMember } = useApp()
   const location = useLocation()
-  if (children_.length === 0 || ['/compare', '/onboarding'].includes(location.pathname)) return null
+  if (members.length === 0 || ['/compare', '/onboarding'].includes(location.pathname)) return null
   return (
-    <div className="flex items-center gap-1.5" role="group" aria-label="お子さんの切り替え">
-      {children_.slice(0, 3).map((c) => (
+    <div className="flex items-center gap-1.5" role="group" aria-label="メンバーの切り替え">
+      {members.slice(0, 3).map((m) => (
         <button
-          key={c.id}
-          onClick={() => selectChild(c.id)}
-          aria-pressed={selectedChild?.id === c.id}
+          key={m.id}
+          onClick={() => selectMember(m.id)}
+          aria-pressed={selectedMember?.id === m.id}
           className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-            selectedChild?.id === c.id
+            selectedMember?.id === m.id
               ? 'bg-brand-600 text-white shadow-sm'
               : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
           }`}
         >
-          {c.name}
+          {m.name}
         </button>
       ))}
     </div>
@@ -107,7 +107,7 @@ function Layout() {
             <h1 className="min-w-0 truncate text-lg font-bold tracking-tight text-neutral-900">{pageTitle}</h1>
           )}
           <div className="ml-auto flex items-center gap-2">
-            <ChildSwitcher />
+            <MemberSwitcher />
             {!isOnboarding && (
               <NavLink
                 to="/settings"

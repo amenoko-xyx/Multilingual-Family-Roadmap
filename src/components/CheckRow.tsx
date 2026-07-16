@@ -13,12 +13,12 @@ import { Icon } from './ui'
 export function CheckRow({
   item,
   check,
-  childId,
+  memberId,
   showMeta,
 }: {
   item: CanDoItem
   check: CheckRecord | undefined
-  childId: string
+  memberId: string
   showMeta?: React.ReactNode
 }) {
   const [confirmUncheck, setConfirmUncheck] = useState(false)
@@ -27,13 +27,13 @@ export function CheckRow({
 
   const toggle = async () => {
     if (!checked) {
-      await addCheck(childId, item.id, todayStr())
+      await addCheck(memberId, item.id, todayStr())
       setEditingDate(false)
     } else if (!confirmUncheck) {
       setConfirmUncheck(true)
       setTimeout(() => setConfirmUncheck(false), 3000)
     } else {
-      await removeCheck(childId, item.id)
+      await removeCheck(memberId, item.id)
       setConfirmUncheck(false)
     }
   }
@@ -63,7 +63,7 @@ export function CheckRow({
                 type="date"
                 value={check!.achievedOn}
                 max={todayStr()}
-                onChange={(e) => e.target.value && updateCheckDate(childId, item.id, e.target.value)}
+                onChange={(e) => e.target.value && updateCheckDate(memberId, item.id, e.target.value)}
                 className="rounded-lg border border-neutral-200 px-2 py-1 text-xs"
               />
               <button onClick={() => setEditingDate(false)} className="text-xs font-medium text-brand-600">

@@ -6,11 +6,11 @@ export interface RadarSeries {
   name: string
   color: string
   dashed?: boolean
-  /** 技能ごとの到達年齢相当(未記録は null → 0 で描画) */
+  /** 技能ごとの到達レベル(0〜6、未記録は null → 0 で描画) */
   values: Record<Skill, number | null>
 }
 
-/** 言語×技能レーダー(値=年齢相当、0〜19歳) */
+/** 言語×技能レーダー(値=到達レベル、0〜6) */
 export function RadarBlock({ title, series }: { title: string; series: RadarSeries[] }) {
   const data = SKILLS.map((skill) => {
     const row: Record<string, string | number> = { skill: T.skill[skill] }
@@ -28,7 +28,7 @@ export function RadarBlock({ title, series }: { title: string; series: RadarSeri
           <RadarChart data={data} outerRadius="72%">
             <PolarGrid stroke="#e5e5e5" />
             <PolarAngleAxis dataKey="skill" tick={{ fontSize: 12, fill: '#525252' }} />
-            <PolarRadiusAxis domain={[0, 19]} tick={false} axisLine={false} />
+            <PolarRadiusAxis domain={[0, 6]} tick={false} axisLine={false} />
             {series.map((s) => (
               <Radar
                 key={s.name}
