@@ -64,18 +64,19 @@ export default function OnboardingPage() {
   return (
     <div className="mx-auto max-w-lg space-y-5">
       {/* ステップインジケーター */}
-      <ol className="flex items-center justify-center gap-1 text-xs" aria-label="登録の進行状況">
+      {/* 折り返し防止:ラベルはnowrap。狭い画面では現在ステップ以外のラベルを隠し、番号/チェックだけにする */}
+      <ol className="flex items-center justify-center text-xs" aria-label="登録の進行状況">
         {STEPS.map((label, i) => (
-          <li key={label} className="flex items-center gap-1">
-            {i > 0 && <span className="mx-1 h-px w-6 bg-neutral-200" aria-hidden />}
+          <li key={label} className="flex items-center">
+            {i > 0 && <span className="mx-1 h-px w-3 shrink-0 bg-neutral-200 sm:w-5" aria-hidden />}
             <span
               aria-current={step === i ? 'step' : undefined}
-              className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 font-medium ${
+              className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-1 font-medium sm:gap-1.5 sm:px-2.5 ${
                 step === i ? 'bg-brand-600 text-white' : step > i ? 'text-brand-700' : 'text-neutral-400'
               }`}
             >
               {step > i ? <Icon name="check_circle" className="text-sm" /> : <span className="tabular-nums">{i + 1}</span>}
-              {label}
+              <span className={step === i ? '' : 'hidden sm:inline'}>{label}</span>
             </span>
           </li>
         ))}
