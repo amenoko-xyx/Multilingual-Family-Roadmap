@@ -188,6 +188,9 @@ export default function PlanPage() {
                           >
                             <span className="text-neutral-400">{T.materialType[m.type]}</span>
                             {m.title}
+                            {m.origin === 'local' && (
+                              <span className="rounded-full bg-brand-50 px-1.5 py-0.5 text-[10px] font-medium text-brand-700">現地</span>
+                            )}
                             {status !== 'notStarted' && (
                               <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${STATUS_CHIP_STYLE[status]}`}>
                                 {T.materialStatus[status]}
