@@ -1,20 +1,30 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { addCheck, db, removeCheck, uid } from '../db'
+import { addCheck, db, removeCheck, uid, updateMemberLanguages } from '../db'
 import { useApp } from '../context/AppContext'
-import { DEFAULT_MEMBER_LANGS, SKILLS, STAGES, type CanDoItem, type Lang } from '../types'
+import { ALL_LANGS, DEFAULT_MEMBER_LANGS, ROLES, SKILLS, STAGES, type CanDoItem, type Lang, type MemberLanguage, type Role } from '../types'
 import { minBirthDateStr, todayStr } from '../lib/dates'
-import { Card, GeoBanner, Icon, LangChip, PrimaryButton, ProgressBar, Segmented, SkillLabel, stageLabelWithAge } from '../components/ui'
+import { Card, GeoBanner, Icon, LangChip, PrimaryButton, ProgressBar, Segmented, SkillLabel, stageLabel, stageLabelWithAge } from '../components/ui'
 import { T } from '../i18n'
 
-const STEPS = ['メンバーの情報', 'いまのようす', '完了'] as const
+const STEPS = ['メンバーの情報', 'ことばの設定', 'いまのようす', '完了'] as const
+
+/** 役割ごとの目標レベルのデフォルト(新規に役割を足すとき用)。SettingsPage と揃える */
+const DEFAULT_TARGET: Record<Role, number> = { native: 6, foreign1: 5, foreign2: 4 }
+
+/** 役割ごとの短い方針説明(ことばの設定ステップで表示) */
+const ROLE_DESC: Record<Role, string> = {
+  native: '思考の土台。目標は S6 を推奨',
+  foreign1: 'しっかり伸ばす。目標は S5 を推奨',
+  foreign2: '細く長く。目標は S4 を推奨(任意)',
+}
 
 /**
- * オンボーディング:メンバー(大人・子供)の登録 →「いまできること」の初期チェック → 完了。
+ * オンボーディング:メンバー登録 → ことばの設定(言語構成)→「いまできること」の初期チェック → 完了。
  * - 現在ステップを常に表示(ニールセン: システム状態の可視化)
- * - 初期チェックはスキップ可能・後から変更可能(ニールセン: ユーザーの主導権と柔軟性)
- * - OOUI: まず「メンバー」というオブジェクトを作り、そのオブジェクトに記録を紐づけていく流れ
+ * - ことばの設定・初期チェックはデフォルトのまま1タップで通過でき、後から変更可能(ニールセン: 柔軟性)
+ * - OOUI: まず「メンバー」というオブジェクトを作り、言語構成・記録をそのオブジェクトに紐づけていく流れ
  */
 export default function OnboardingPage() {
   const { members, selectMember, showToast } = useApp()
@@ -142,18 +152,154 @@ export default function OnboardingPage() {
       )}
 
       {step === 1 && memberId && (
-        <AssessmentStep memberId={memberId} memberName={name} onDone={() => setStep(2)} />
+        <LanguageSetupStep memberId={memberId} memberName={name} onDone={() => setStep(2)} />
       )}
 
-      {step === 2 && memberId && <DoneStep memberId={memberId} memberName={name} />}
+      {step === 2 && memberId && (
+        <AssessmentStep memberId={memberId} memberName={name} onDone={() => setStep(3)} />
+      )}
+
+      {step === 3 && memberId && <DoneStep memberId={memberId} memberName={name} />}
     </div>
   )
 }
 
-/* ---------- Step 2: いまのようすチェック ---------- */
+/* ---------- Step 2: ことばの設定(言語構成) ---------- */
+
+/**
+ * メンバーの言語構成(役割ごとの言語・目標レベル・判定ペース)を設定するステップ。
+ * ローカルstateで保持し、「次へ」で updateMemberLanguages にまとめて保存する。
+ * デフォルト(母語=日本語S6 / 第一外国語=英語S5 / 第二外国語=中国語S4)のままなら
+ * 1タップで通過できる軽さを保つ(ニールセン: ユーザーの主導権と柔軟性)。
+ * UIは SettingsPage の言語構成セクションのパターンを踏襲。
+ */
+function LanguageSetupStep({ memberId, memberName, onDone }: { memberId: string; memberName: string; onDone: () => void }) {
+  const { showToast } = useApp()
+  // メンバーは DEFAULT_MEMBER_LANGS で作成済み。同じ既定値からローカルに編集する
+  const [langs, setLangs] = useState<MemberLanguage[]>(() => DEFAULT_MEMBER_LANGS.map((ml) => ({ ...ml })))
+  const [saving, setSaving] = useState(false)
+
+  const mlOf = (role: Role) => langs.find((ml) => ml.role === role)
+
+  /** 役割の言語を変更。第二外国語は空('')で「設定しない」。他役割と重複したら入れ替える。 */
+  const changeRoleLang = (role: Role, newLang: Lang | '') => {
+    const next = langs.map((ml) => ({ ...ml }))
+    if (role === 'foreign2' && newLang === '') {
+      return setLangs(next.filter((ml) => ml.role !== 'foreign2'))
+    }
+    if (newLang === '') return
+    const target = next.find((ml) => ml.role === role)
+    const dup = next.find((ml) => ml.lang === newLang && ml.role !== role)
+    if (target) {
+      if (dup) dup.lang = target.lang // swap で重複を避ける
+      target.lang = newLang
+    } else {
+      // 第二外国語を「設定しない」から復活させる。重複時はそのまま拒否
+      if (dup) return void showToast({ message: `${T.lang[newLang]}はすでに設定されています` })
+      next.push({ lang: newLang, role, targetStage: DEFAULT_TARGET[role], targetDate: null, pace: 1 })
+    }
+    setLangs(next)
+  }
+
+  const changeRoleField = (role: Role, patch: Partial<MemberLanguage>) => {
+    setLangs((prev) => prev.map((ml) => (ml.role === role ? { ...ml, ...patch } : { ...ml })))
+  }
+
+  const goNext = async () => {
+    setSaving(true)
+    await updateMemberLanguages(memberId, langs)
+    onDone()
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-5">
+        <h2 className="text-lg font-bold text-neutral-900">{memberName}さんのことばの設定</h2>
+        <p className="mt-1 text-sm leading-relaxed text-neutral-500">
+          役割ごとに言語と目標レベルを決めます。
+          <strong className="font-semibold text-neutral-600">このままでも大丈夫です。</strong>
+          あとから設定画面でいつでも変更できます。
+        </p>
+      </Card>
+
+      <Card className="space-y-4 p-4">
+        <ul className="divide-y divide-neutral-100">
+          {ROLES.map((role) => {
+            const ml = mlOf(role)
+            const isOptional = role === 'foreign2'
+            return (
+              <li key={role} className="py-3">
+                <div className="mb-2 flex flex-wrap items-baseline gap-x-2">
+                  <span className="text-sm font-semibold text-neutral-700">{T.role[role]}</span>
+                  <span className="text-xs text-neutral-400">{ROLE_DESC[role]}</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <select
+                    value={ml?.lang ?? ''}
+                    onChange={(e) => changeRoleLang(role, e.target.value as Lang | '')}
+                    aria-label={`${T.role[role]}の言語`}
+                    className="rounded-xl border border-neutral-200 px-2.5 py-1.5 text-sm"
+                  >
+                    {isOptional && <option value="">設定しない</option>}
+                    {ALL_LANGS.map((al) => (
+                      <option key={al} value={al}>{T.lang[al]}</option>
+                    ))}
+                  </select>
+                  {ml && (
+                    <>
+                      <label className="text-xs text-neutral-500">
+                        目標
+                        <select
+                          value={ml.targetStage}
+                          onChange={(e) => changeRoleField(role, { targetStage: Number(e.target.value) })}
+                          aria-label={`${T.role[role]}の目標レベル`}
+                          className="ml-1 rounded-xl border border-neutral-200 px-2 py-1.5 text-sm"
+                        >
+                          {STAGES.map((s) => (
+                            <option key={s.idx} value={s.idx}>{stageLabel(s.idx)}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="text-xs text-neutral-500">
+                        ペース
+                        <select
+                          value={ml.pace}
+                          onChange={(e) => changeRoleField(role, { pace: Number(e.target.value) })}
+                          aria-label={`${T.role[role]}の判定ペース`}
+                          className="ml-1 rounded-xl border border-neutral-200 px-2 py-1.5 text-sm"
+                        >
+                          <option value={1}>しっかり(標準)</option>
+                          <option value={0.75}>ゆるめ(×0.75)</option>
+                        </select>
+                      </label>
+                    </>
+                  )}
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+        <p className="rounded-xl bg-neutral-50 px-3.5 py-3 text-xs leading-relaxed text-neutral-400">
+          母語は思考の土台なので高め、外国語は生活と両立できるよう役割ごとに目標を傾けています。
+          第二外国語は「設定しない」も選べます(2言語運用)。
+        </p>
+      </Card>
+
+      <div className="sticky bottom-4">
+        <PrimaryButton onClick={goNext} disabled={saving} className="w-full shadow-md">
+          次へ:いまのようすを記録
+        </PrimaryButton>
+      </div>
+    </div>
+  )
+}
+
+/* ---------- Step 3: いまのようすチェック ---------- */
 
 function AssessmentStep({ memberId, memberName, onDone }: { memberId: string; memberName: string; onDone: () => void }) {
-  const { langs } = useApp()
+  // 対象言語・順序・目標レベルは、このメンバーの languages(役割順)を使う
+  const { langs, memberLanguages } = useApp()
   const items = useLiveQuery(() => db.items.toArray(), [], undefined)
   const cells = useLiveQuery(() => db.cells.toArray(), [], undefined)
   const checks = useLiveQuery(() => db.checks.where('memberId').equals(memberId).toArray(), [memberId], undefined)
@@ -164,6 +310,9 @@ function AssessmentStep({ memberId, memberName, onDone }: { memberId: string; me
   const lang: Lang = langs[langIdx]
   const isLast = langIdx === langs.length - 1
   const startStage = startStages[lang] as number | undefined
+  // その言語の目標レベル。これより上の段階は初期チェックでは扱わない
+  const targetOf = (l: Lang) => memberLanguages.find((ml) => ml.lang === l)?.targetStage ?? 6
+  const targetStage = targetOf(lang)
 
   const checkedIds = useMemo(() => new Set((checks ?? []).map((c) => c.itemId)), [checks])
 
@@ -249,7 +398,7 @@ function AssessmentStep({ memberId, memberName, onDone }: { memberId: string; me
               <Icon name="flag" className="text-lg text-neutral-400" />
               <span className="text-sm font-medium text-neutral-800">まだ始めていない・最初から確認する</span>
             </button>
-            {STAGES.map((stage) => (
+            {STAGES.filter((s) => s.idx <= targetStage).map((stage) => (
               <button
                 key={stage.idx}
                 onClick={() => chooseLevel(stage.idx)}
@@ -281,7 +430,7 @@ function AssessmentStep({ memberId, memberName, onDone }: { memberId: string; me
         </div>
       )}
 
-      {startStage !== undefined && STAGES.filter((s) => s.idx >= startStage).map((stage) => {
+      {startStage !== undefined && STAGES.filter((s) => s.idx >= startStage && s.idx <= targetStage).map((stage) => {
         const stageItems = items.filter((i) => i.lang === lang && i.stage === stage.idx)
         if (stageItems.length === 0) return null
         const done = stageItems.filter((i) => checkedIds.has(i.id)).length
@@ -357,11 +506,11 @@ function AssessmentStep({ memberId, memberName, onDone }: { memberId: string; me
   )
 }
 
-/* ---------- Step 3: 完了 ---------- */
+/* ---------- Step 4: 完了 ---------- */
 
 function DoneStep({ memberId, memberName }: { memberId: string; memberName: string }) {
   const navigate = useNavigate()
-  const { langs } = useApp()
+  const { langs, memberLanguages } = useApp()
   const checks = useLiveQuery(() => db.checks.where('memberId').equals(memberId).toArray(), [memberId], undefined)
   if (checks === undefined) return null
 
@@ -392,6 +541,20 @@ function DoneStep({ memberId, memberName }: { memberId: string; memberName: stri
           ))}
         </ul>
       )}
+
+      {/* 設定した言語構成のサマリー(役割・言語・目標レベル) */}
+      <div className="mx-auto max-w-72 rounded-xl bg-neutral-50 p-3.5 text-left">
+        <p className="mb-2 text-center text-xs font-semibold text-neutral-500">ことばの設定</p>
+        <ul className="space-y-1.5">
+          {memberLanguages.map((ml) => (
+            <li key={ml.role} className="flex items-center gap-2 text-sm">
+              <span className="w-16 shrink-0 text-xs font-medium text-neutral-500">{T.role[ml.role]}</span>
+              <LangChip lang={ml.lang} />
+              <span className="ml-auto text-xs tabular-nums text-neutral-500">目標 {stageLabel(ml.targetStage)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
       <div className="space-y-2">
         <PrimaryButton onClick={() => navigate('/')} className="w-full">
           ホームでダッシュボードを見る
