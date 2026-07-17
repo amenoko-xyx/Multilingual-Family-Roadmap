@@ -6,7 +6,7 @@ import HomePage from './pages/HomePage'
 import RoadmapPage from './pages/RoadmapPage'
 import GapPage from './pages/GapPage'
 import PlanPage from './pages/PlanPage'
-import ComparePage from './pages/ComparePage'
+import FamilyPage from './pages/FamilyPage'
 import SettingsPage from './pages/SettingsPage'
 import OnboardingPage from './pages/OnboardingPage'
 
@@ -22,7 +22,7 @@ const PAGE_TITLE: Record<string, string> = {
   '/roadmap': T.nav.roadmap,
   '/gap': T.nav.gap,
   '/plan': T.nav.plan,
-  '/compare': T.nav.compare,
+  '/family': T.nav.compare,
   '/settings': T.nav.settings,
   '/onboarding': 'メンバーの登録',
 }
@@ -30,7 +30,7 @@ const PAGE_TITLE: Record<string, string> = {
 function MemberSwitcher() {
   const { members, selectedMember, selectMember } = useApp()
   const location = useLocation()
-  if (members.length === 0 || ['/compare', '/onboarding'].includes(location.pathname)) return null
+  if (members.length === 0 || ['/family', '/onboarding'].includes(location.pathname)) return null
   return (
     <div className="flex items-center gap-1.5" role="group" aria-label="メンバーの切り替え">
       {members.slice(0, 3).map((m) => (
@@ -152,7 +152,8 @@ function Layout() {
           <Route path="/roadmap" element={<RoadmapPage />} />
           <Route path="/gap" element={<GapPage />} />
           <Route path="/plan" element={<PlanPage />} />
-          <Route path="/compare" element={<ComparePage />} />
+          <Route path="/family" element={<FamilyPage />} />
+          <Route path="/compare" element={<Navigate to="/family" replace />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </main>

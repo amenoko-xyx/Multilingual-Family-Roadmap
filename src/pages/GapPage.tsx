@@ -30,7 +30,7 @@ function gapText(status: Status): string {
 
 /** F3: ギャップ分析(役割別の目標レベル × 到達レベル) */
 export default function GapPage() {
-  const { selectedMember, members, langs, memberLanguages } = useApp()
+  const { selectedMember, langs, memberLanguages } = useApp()
   const items = useLiveQuery(() => db.items.toArray(), [], undefined)
   const checks = useLiveQuery(
     () => (selectedMember ? db.checks.where('memberId').equals(selectedMember.id).toArray() : Promise.resolve([] as CheckRecord[])),
@@ -178,14 +178,10 @@ export default function GapPage() {
         <SectionTitle>{T.nav.compare}</SectionTitle>
         <Card className="flex flex-col items-center gap-3 p-6 text-center">
           <p className="text-sm text-neutral-500">{T.compareNote}</p>
-          {members.length >= 2 ? (
-            <Link to="/compare" className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
-              <Icon name="groups" className="text-lg" />
-              家族で見比べる
-            </Link>
-          ) : (
-            <p className="text-sm text-neutral-400">見比べにはメンバーが2人以上必要です。設定から追加できます。</p>
-          )}
+          <Link to="/family" className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-700">
+            <Icon name="groups" className="text-lg" />
+            家族バランスを見る
+          </Link>
         </Card>
       </section>
 
