@@ -12,6 +12,8 @@ import {
   type MaterialStatus,
   type MaterialStatusValue,
   type MaterialType,
+  type MemberLanguage,
+  type Role,
   type Skill,
 } from '../types'
 import { matchMaterials } from '../lib/logic'
@@ -20,9 +22,20 @@ import { T } from '../i18n'
 
 type View = 'table' | 'timeline'
 
+/** 選択中メンバーにとってのその言語の役割(構成に無い言語は null=未設定) */
+function roleFor(memberLanguages: MemberLanguage[], lang: Lang): Role | null {
+  return memberLanguages.find((ml) => ml.lang === lang)?.role ?? null
+}
+
+/** 役割に応じたベンチマーク文言(母語=native側、それ以外(外国語/未設定)=foreign側) */
+function benchmarkFor(cell: { benchmarks: { foreign: string; native: string } } | undefined, role: Role | null): string {
+  if (!cell) return '—'
+  return role === 'native' ? cell.benchmarks.native : cell.benchmarks.foreign
+}
+
 /** F1: マスターロードマップ(閲覧+編集) */
 export default function RoadmapPage() {
-  const { langs } = useApp()
+  const { langs, memberLanguages } = useApp()
   const items = useLiveQuery(() => db.items.toArray(), [], undefined)
   const cells = useLiveQuery(() => db.cells.toArray(), [], undefined)
   const materials = useLiveQuery(() => db.materials.toArray(), [], undefined)
@@ -69,13 +82,14 @@ export default function RoadmapPage() {
                   {langs.map((lang) => {
                     const cell = cellOf(lang, stage.idx)
                     const cellItems = itemsOf(lang, stage.idx)
+                    const role = roleFor(memberLanguages, lang)
                     return (
                       <td key={lang} className="px-1.5 py-1.5 align-top">
                         <button
                           onClick={() => setDetail({ lang, stage: stage.idx })}
                           className="w-full rounded-xl px-2 py-2 text-left transition-colors hover:bg-neutral-50"
                         >
-                          <div className="text-xs font-semibold text-neutral-800">{cell?.benchmarks.foreign ?? '—'}</div>
+                          <div className="text-xs font-semibold text-neutral-800">{benchmarkFor(cell, role)}</div>
                           <div className="mt-1 text-xs text-neutral-400">Can-Do {cellItems.length}項目</div>
                         </button>
                       </td>
@@ -96,6 +110,7 @@ export default function RoadmapPage() {
                 </div>
                 {langs.map((lang) => {
                   const cell = cellOf(lang, stage.idx)
+                  const role = roleFor(memberLanguages, lang)
                   return (
                     <button
                       key={lang}
@@ -104,7 +119,7 @@ export default function RoadmapPage() {
                       style={{ borderTopColor: langStroke(langs.indexOf(lang)), borderTopWidth: 3 }}
                     >
                       <LangChip lang={lang} />
-                      <div className="mt-1.5 text-xs font-semibold text-neutral-800">{cell?.benchmarks.foreign}</div>
+                      <div className="mt-1.5 text-xs font-semibold text-neutral-800">{benchmarkFor(cell, role)}</div>
                       <ul className="mt-1.5 space-y-1">
                         {SKILLS.map((s) =>
                           cell?.summaries[s] ? (
@@ -154,8 +169,9 @@ function CellDetailModal({
   materials: Material[]
   onClose: () => void
 }) {
-  const { selectedMember } = useApp()
+  const { selectedMember, memberLanguages } = useApp()
   const cell = useLiveQuery(() => db.cells.get(`${lang}-${stage}`), [lang, stage])
+  const role = roleFor(memberLanguages, lang)
   const [deleting, setDeleting] = useState<CanDoItem | null>(null)
   const [deleteCheckCount, setDeleteCheckCount] = useState(0)
   const [editing, setEditing] = useState<CanDoItem | null>(null)
@@ -189,10 +205,18 @@ function CellDetailModal({
     <Modal open onClose={onClose} title={`${T.lang[lang]} / ${stageLabel(stage)}`} wide>
       {cell && (
         <div className="mb-4 space-y-1.5 rounded-xl bg-neutral-50 p-3.5 text-sm">
-          <div><span className="font-semibold text-neutral-700">目安(外国語トラック):</span> {cell.benchmarks.foreign}</div>
-          {cell.benchmarks.native !== cell.benchmarks.foreign && (
-            <div><span className="font-semibold text-neutral-700">目安(母語トラック):</span> {cell.benchmarks.native}</div>
-          )}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="font-semibold text-neutral-700">外国語として:</span> {cell.benchmarks.foreign}
+            {role !== null && role !== 'native' && (
+              <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700">あなたの基準</span>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="font-semibold text-neutral-700">母語として:</span> {cell.benchmarks.native}
+            {role === 'native' && (
+              <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700">あなたの基準</span>
+            )}
+          </div>
           <div><span className="font-semibold text-neutral-700">家庭での取り組み:</span> {cell.tip}</div>
           {cell.source && <div className="text-xs text-neutral-400">根拠: {cell.source}</div>}
         </div>
@@ -328,6 +352,8 @@ function MaterialsSection({ materials }: { materials: Material[] }) {
   )
   const [langFilter, setLangFilter] = useState<'all' | Lang>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | MaterialStatusValue>('all')
+  const [audienceFilter, setAudienceFilter] = useState<'all' | 'child' | 'adult'>('all')
+  const [originFilter, setOriginFilter] = useState<'all' | Material['origin']>('all')
   const [adding, setAdding] = useState(false)
   const [deleting, setDeleting] = useState<Material | null>(null)
   const [form, setForm] = useState({ title: '', type: 'book' as MaterialType, lang: 'en' as Lang, skill: 'reading' as Skill, audience: 'all' as Material['audience'], origin: 'japan' as Material['origin'], from: 2, to: 4, note: '' })
@@ -337,6 +363,9 @@ function MaterialsSection({ materials }: { materials: Material[] }) {
   const filtered = materials
     .filter((m) => langFilter === 'all' || m.languages.includes(langFilter))
     .filter((m) => !selectedMember || statusFilter === 'all' || statusOf(m.id) === statusFilter)
+    // audience==='all' の教材は子供向け/大人向けどちらの絞り込みにもヒットする
+    .filter((m) => audienceFilter === 'all' || m.audience === 'all' || m.audience === audienceFilter)
+    .filter((m) => originFilter === 'all' || m.origin === originFilter)
 
   const add = async () => {
     if (!form.title.trim()) return
@@ -386,6 +415,24 @@ function MaterialsSection({ materials }: { materials: Material[] }) {
             ]}
           />
         )}
+        <Segmented<'all' | 'child' | 'adult'>
+          value={audienceFilter}
+          onChange={setAudienceFilter}
+          options={[
+            { value: 'all', label: 'すべて' },
+            { value: 'child', label: '子供向け' },
+            { value: 'adult', label: '大人向け' },
+          ]}
+        />
+        <Segmented<'all' | Material['origin']>
+          value={originFilter}
+          onChange={setOriginFilter}
+          options={[
+            { value: 'all', label: 'すべて' },
+            { value: 'japan', label: '日本で入手' },
+            { value: 'local', label: '現地教材' },
+          ]}
+        />
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         {filtered.map((m) => {
@@ -406,8 +453,11 @@ function MaterialsSection({ materials }: { materials: Material[] }) {
                   {m.languages.map((l) => <LangChip key={l} lang={l} />)}
                   {m.skills.map((s) => <SkillLabel key={s} skill={s} className="text-xs text-neutral-500" />)}
                   <span>{m.stages.length > 0 ? `S${Math.min(...m.stages)}〜S${Math.max(...m.stages)}` : '—'}</span>
-                  <span className="rounded-full bg-neutral-100 px-2 py-0.5">
-                    {m.audience === 'child' ? '子供' : m.audience === 'adult' ? '大人' : '共通'}・{m.origin === 'japan' ? '日本' : '現地'}
+                  <span className={`rounded-full px-2 py-0.5 ${m.origin === 'local' ? 'bg-brand-50 text-brand-700' : 'bg-neutral-100 text-neutral-500'}`}>
+                    {m.origin === 'local' ? '現地' : '日本'}
+                  </span>
+                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-neutral-500">
+                    {m.audience === 'child' ? '子供' : m.audience === 'adult' ? '大人' : '共通'}
                   </span>
                 </div>
                 {m.note && <p className="mt-1 text-xs text-neutral-500">{m.note}</p>}
