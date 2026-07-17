@@ -15,9 +15,19 @@ const DEFAULT_TARGET: Record<Role, number> = { native: 6, foreign1: 5, foreign2:
 
 /** 役割ごとの短い方針説明(ことばの設定ステップで表示) */
 const ROLE_DESC: Record<Role, string> = {
-  native: '思考の土台。目標は S6 を推奨',
-  foreign1: 'しっかり伸ばす。目標は S5 を推奨',
-  foreign2: '細く長く。目標は S4 を推奨(任意)',
+  native: '思考の土台になることば',
+  foreign1: 'しっかり伸ばすことば',
+  foreign2: '細く長く続けることば(任意)',
+}
+
+/** レベルの解釈(S1〜S6 の見方)。目標設定はここでは行わず、読み物として示すだけ */
+const STAGE_DESC: Record<number, string> = {
+  1: '音とあいさつに親しむ',
+  2: '定型文で身近なことを伝える',
+  3: '日常の用が足りる',
+  4: '自立した使用者の入り口',
+  5: '学業・仕事で通用し始める',
+  6: '教養ある母語話者に近い運用',
 }
 
 /**
@@ -202,10 +212,6 @@ function LanguageSetupStep({ memberId, memberName, onDone }: { memberId: string;
     setLangs(next)
   }
 
-  const changeRoleField = (role: Role, patch: Partial<MemberLanguage>) => {
-    setLangs((prev) => prev.map((ml) => (ml.role === role ? { ...ml, ...patch } : { ...ml })))
-  }
-
   const goNext = async () => {
     setSaving(true)
     await updateMemberLanguages(memberId, langs)
@@ -218,7 +224,7 @@ function LanguageSetupStep({ memberId, memberName, onDone }: { memberId: string;
       <Card className="p-5">
         <h2 className="text-lg font-bold text-neutral-900">{memberName}さんのことばの設定</h2>
         <p className="mt-1 text-sm leading-relaxed text-neutral-500">
-          役割ごとに言語と目標レベルを決めます。
+          母語・第一外国語・第二外国語の3つのことばを選びます。
           <strong className="font-semibold text-neutral-600">このままでも大丈夫です。</strong>
           あとから設定画面でいつでも変更できます。
         </p>
@@ -235,56 +241,38 @@ function LanguageSetupStep({ memberId, memberName, onDone }: { memberId: string;
                   <span className="text-sm font-semibold text-neutral-700">{T.role[role]}</span>
                   <span className="text-xs text-neutral-400">{ROLE_DESC[role]}</span>
                 </div>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                  <select
-                    value={ml?.lang ?? ''}
-                    onChange={(e) => changeRoleLang(role, e.target.value as Lang | '')}
-                    aria-label={`${T.role[role]}の言語`}
-                    className="rounded-xl border border-neutral-200 px-2.5 py-1.5 text-sm"
-                  >
-                    {isOptional && <option value="">設定しない</option>}
-                    {ALL_LANGS.map((al) => (
-                      <option key={al} value={al}>{T.lang[al]}</option>
-                    ))}
-                  </select>
-                  {ml && (
-                    <>
-                      <label className="text-xs text-neutral-500">
-                        目標
-                        <select
-                          value={ml.targetStage}
-                          onChange={(e) => changeRoleField(role, { targetStage: Number(e.target.value) })}
-                          aria-label={`${T.role[role]}の目標レベル`}
-                          className="ml-1 rounded-xl border border-neutral-200 px-2 py-1.5 text-sm"
-                        >
-                          {STAGES.map((s) => (
-                            <option key={s.idx} value={s.idx}>{stageLabel(s.idx)}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="text-xs text-neutral-500">
-                        ペース
-                        <select
-                          value={ml.pace}
-                          onChange={(e) => changeRoleField(role, { pace: Number(e.target.value) })}
-                          aria-label={`${T.role[role]}の判定ペース`}
-                          className="ml-1 rounded-xl border border-neutral-200 px-2 py-1.5 text-sm"
-                        >
-                          <option value={1}>しっかり(標準)</option>
-                          <option value={0.75}>ゆるめ(×0.75)</option>
-                        </select>
-                      </label>
-                    </>
-                  )}
-                </div>
+                {/* この段階では言語の選択のみ。目標レベル・判定ペースは既定値のまま(設定画面で変更可能) */}
+                <select
+                  value={ml?.lang ?? ''}
+                  onChange={(e) => changeRoleLang(role, e.target.value as Lang | '')}
+                  aria-label={`${T.role[role]}の言語`}
+                  className="w-full max-w-60 rounded-xl border border-neutral-200 px-2.5 py-1.5 text-sm"
+                >
+                  {isOptional && <option value="">設定しない</option>}
+                  {ALL_LANGS.map((al) => (
+                    <option key={al} value={al}>{T.lang[al]}</option>
+                  ))}
+                </select>
               </li>
             )
           })}
         </ul>
-        <p className="rounded-xl bg-neutral-50 px-3.5 py-3 text-xs leading-relaxed text-neutral-400">
-          母語は思考の土台なので高め、外国語は生活と両立できるよう役割ごとに目標を傾けています。
-          第二外国語は「設定しない」も選べます(2言語運用)。
-        </p>
+        {/* レベルの解釈(読み物)。目標の設定はここでは行わない */}
+        <div className="rounded-xl bg-neutral-50 px-3.5 py-3">
+          <p className="mb-1.5 text-xs font-semibold text-neutral-500">レベル(S1〜S6)の見方</p>
+          <ul className="space-y-1 text-xs leading-relaxed text-neutral-400">
+            {STAGES.map((s) => (
+              <li key={s.idx}>
+                <span className="font-medium text-neutral-500">S{s.idx} {s.name}</span>
+                {' — '}{STAGE_DESC[s.idx]}
+                ({s.idx === 6 ? s.ageHint : `母語話者の${s.ageHint}ごろ`})
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-xs leading-relaxed text-neutral-400">
+            第二外国語は「設定しない」も選べます(2言語運用)。
+          </p>
+        </div>
       </Card>
 
       <div className="sticky bottom-4">
