@@ -999,7 +999,243 @@ const SEED: Record<Lang, SeedCell[]> = {
   ],
 
   // ======================= ポルトガル語 =======================
-  pt: [],
+  pt: [
+    // ---- S1 入門 ----
+    {
+      benchmarks: {
+        foreign: '文字と音・あいさつ / CEFR Pre-A1',
+        native: '就学前(識字前)',
+      },
+      tip: '1日10〜15分。ポルトガル語の童謡かけ流しと語りかけ。文字と音は遊びで少しずつ。',
+      source: 'CEFR Pre-A1・ブラジル就学前(BNCC Educação Infantil)を参考',
+      skills: {
+        listening: {
+          summary: 'あいさつと身近な語がわかる',
+          items: [
+            'ポルトガル語の童謡や声かけ(oi・obrigado)に反応する',
+            '「vem cá」「senta」など簡単な指示に動作で応じる',
+          ],
+        },
+        speaking: {
+          summary: 'あいさつと身近な言葉を言える',
+          items: [
+            'あいさつ(bom dia・obrigado・tchau)を場面に合わせて言える',
+            '身近なものの名前を10個以上ポルトガル語で言える',
+          ],
+        },
+        reading: {
+          summary: '文字と音に親しむ',
+          items: [
+            'アルファベットと基本の文字・音の対応を読める',
+            '身近な短い単語を拾い読みできる',
+          ],
+        },
+        writing: {
+          summary: '文字を書く準備ができる',
+          items: [
+            '自分の名前をアルファベットで書ける',
+            'アルファベット大文字をすべて書ける',
+          ],
+        },
+      },
+    },
+    // ---- S2 初級 ----
+    {
+      benchmarks: {
+        foreign: 'CEFR A1 / CAPLE ACESSO',
+        native: 'Fundamental 1〜2年(BNCC)',
+      },
+      tip: '1日20〜30分。段階別リーダーの多読+オンラインレッスン週1回。',
+      source: 'CEFR A1・CAPLE ACESSO・Ensino Fundamental 1〜2年(BNCC)を参考',
+      skills: {
+        listening: {
+          summary: '日常のやりとりを聞き取れる',
+          items: [
+            '日常的な指示や質問を聞いて適切に応答できる',
+            '短い子供向けアニメや朗読音声のあらすじをつかめる',
+          ],
+        },
+        speaking: {
+          summary: '自分のことを文で話せる',
+          items: [
+            '今日の出来事をポルトガル語3文で話せる',
+            '相手と身近な話題で数往復のやりとりができる',
+          ],
+        },
+        reading: {
+          summary: '段階別リーダーの初級を読める',
+          items: [
+            '文字と音の対応で知らない単語を読める',
+            '段階別リーダー(Graded Readers)の初級本を1冊一人で読み切る',
+            'CEFR A1レベルの読解問題で6割正解する',
+          ],
+        },
+        writing: {
+          summary: '短い文を書ける',
+          items: [
+            '自分や家族について3文のポルトガル語の文を書ける',
+            'よく使う基本単語を音から推測してつづれる',
+          ],
+        },
+      },
+    },
+    // ---- S3 初中級 ----
+    {
+      benchmarks: {
+        foreign: 'CEFR A2 / CAPLE CIPLE',
+        native: 'Fundamental 3〜5年',
+      },
+      tip: '1日30分。子供向けの読み物多読+ポルトガル語日記+オンラインレッスン週1〜2回。',
+      source: 'CEFR A2・CAPLE CIPLE・Ensino Fundamental 3〜5年を参考',
+      skills: {
+        listening: {
+          summary: '子供向けコンテンツを字幕なしで理解',
+          items: [
+            '児童向けアニメ・動画を字幕なしで大意理解できる',
+            'CEFR A2レベルのリスニング問題で6割正解する',
+          ],
+        },
+        speaking: {
+          summary: '意見を理由付きで話せる',
+          items: [
+            '身近な話題について理由を1つ添えて意見を3文以上話せる',
+            '注文・道案内など日常の用事のやりとりができる',
+          ],
+        },
+        reading: {
+          summary: '初級の読み物を読める',
+          items: [
+            '子供向けの初級読み物(Turma da Mônica等)を1冊読み切る',
+            'CEFR A2レベルの読解問題で6割正解する',
+          ],
+        },
+        writing: {
+          summary: 'まとまった文章を書ける',
+          items: [
+            '5文以上のポルトガル語日記を書ける',
+            '意見+理由を添えた短い文章を書ける',
+          ],
+        },
+      },
+    },
+    // ---- S4 中級 ----
+    {
+      benchmarks: {
+        foreign: 'Celpe-Bras Intermediário / CAPLE DEPLE(CEFR B1)',
+        native: 'Fundamental 6〜9年',
+      },
+      tip: '1日30〜40分。映画・ニュースの多聴多読+作文を書いて添削を受ける。',
+      source: 'Celpe-Bras Intermediário・CAPLE DEPLE・Ensino Fundamental 6〜9年を参考',
+      skills: {
+        listening: {
+          summary: '生のコンテンツを楽しめる',
+          items: [
+            '映画・ドラマを字幕付きで楽しめる',
+            'やさしいポルトガル語ニュースの要点を聞き取れる',
+          ],
+        },
+        speaking: {
+          summary: '社会的な話題で意見を言える',
+          items: [
+            '学校生活や環境などの話題について1分間意見を話せる',
+            'ネイティブ話者と日常会話を不自由なく続けられる',
+          ],
+        },
+        reading: {
+          summary: '児童〜YA向け読み物を読める',
+          items: [
+            '児童〜YA向けの小説を1冊読み切る',
+            'Celpe-Bras Intermediárioレベルの読解課題に対応できる',
+          ],
+        },
+        writing: {
+          summary: '構成のあるエッセイを書ける',
+          items: [
+            '主張+理由+結論の構成で意見文を書ける',
+            'ポルトガル語でメールやチャットのやりとりができる',
+          ],
+        },
+      },
+    },
+    // ---- S5 中上級 ----
+    {
+      benchmarks: {
+        foreign: 'Celpe-Bras Intermediário Superior / DIPLE(CEFR B2)',
+        native: 'Ensino Médio(高校)',
+      },
+      tip: '1日40分。ニュース・講演の素材で4技能をバランスよく。試験対策も並行する。',
+      source: 'Celpe-Bras Intermediário Superior・CAPLE DIPLE・Ensino Médioを参考',
+      skills: {
+        listening: {
+          summary: '講演・素材を理解',
+          items: [
+            '講演動画やニュースを字幕なしで大意把握できる',
+            'Celpe-Bras中上級レベルの聴解課題に対応できる',
+          ],
+        },
+        speaking: {
+          summary: '議論に参加できる',
+          items: [
+            '時事問題について2分間、構成立てて意見を述べられる',
+            'ネイティブ話者との議論に不自由なく参加できる',
+          ],
+        },
+        reading: {
+          summary: '一般向け書籍・記事を読める',
+          items: [
+            '一般向けの本やニュース記事を辞書少なめで読める',
+            'Celpe-Bras中上級レベルの読解課題に対応できる',
+          ],
+        },
+        writing: {
+          summary: '構成の整った意見文を書ける',
+          items: [
+            '構成の整った意見文(300〜400語)を書ける',
+            '仕事や学校の連絡メールを不自由なく書ける',
+          ],
+        },
+      },
+    },
+    // ---- S6 上級(大人の運用) ----
+    {
+      benchmarks: {
+        foreign: 'Celpe-Bras Avançado / DAPLE〜DUPLE(CEFR C1〜)',
+        native: '大学以上',
+      },
+      tip: '週4回×40分。論説・専門記事の読解と、仕事のメール・報告書など実務ポルトガル語の作成に取り組む。',
+      source: 'Celpe-Bras Avançado・CAPLE DAPLE〜DUPLE・大学以上を参考',
+      skills: {
+        listening: {
+          summary: '専門的な講演・議論を理解',
+          items: [
+            '専門的な講演や議論を字幕なしで論点まで理解できる',
+            'Celpe-Bras上級レベルの聴解課題に対応できる',
+          ],
+        },
+        speaking: {
+          summary: '専門的な議論で発言できる',
+          items: [
+            '仕事や専門分野の話題について立場を明確にして議論できる',
+            '会議で意見を述べ、質疑に的確に応答できる',
+          ],
+        },
+        reading: {
+          summary: '専門書・論説を読める',
+          items: [
+            'ポルトガル語の論説記事・専門書・業務文書を読み通せる',
+            'Celpe-Bras上級レベルの読解課題に対応できる',
+          ],
+        },
+        writing: {
+          summary: '実務文書・論説を書ける',
+          items: [
+            '仕事のメールや報告書をポルトガル語で過不足なく書ける',
+            '論理的な論説文を構成立てて書ける',
+          ],
+        },
+      },
+    },
+  ],
 
   // ======================= スペイン語 =======================
   es: [],
