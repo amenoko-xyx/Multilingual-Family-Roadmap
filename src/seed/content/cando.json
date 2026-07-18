@@ -1,0 +1,1820 @@
+[
+  {
+    "lang": "ja",
+    "stage": 1,
+    "skill": "listening",
+    "text": "「おはよう」「ありがとう」などのあいさつを聞いて反応できる"
+  },
+  {
+    "lang": "ja",
+    "stage": 1,
+    "skill": "listening",
+    "text": "「ちょうだい」「見せて」など身近な指示を聞いて行動できる"
+  },
+  {
+    "lang": "ja",
+    "stage": 1,
+    "skill": "speaking",
+    "text": "場面に合ったあいさつ(おはよう・ありがとう・さようなら)を言える"
+  },
+  {
+    "lang": "ja",
+    "stage": 1,
+    "skill": "speaking",
+    "text": "身近なものの名前を10個以上言える"
+  },
+  {
+    "lang": "ja",
+    "stage": 1,
+    "skill": "reading",
+    "text": "ひらがなをすべて読める"
+  },
+  {
+    "lang": "ja",
+    "stage": 1,
+    "skill": "reading",
+    "text": "ひらがなの短い絵本を1冊、指でたどりながら音読できる"
+  },
+  {
+    "lang": "ja",
+    "stage": 1,
+    "skill": "writing",
+    "text": "自分の名前をひらがなで書ける"
+  },
+  {
+    "lang": "ja",
+    "stage": 1,
+    "skill": "writing",
+    "text": "線や丸をまねして書き、鉛筆で運筆ができる"
+  },
+  {
+    "lang": "ja",
+    "stage": 2,
+    "skill": "listening",
+    "text": "その日の出来事など少し長い話を聞いて内容がわかる"
+  },
+  {
+    "lang": "ja",
+    "stage": 2,
+    "skill": "listening",
+    "text": "「〜してから〜する」など2つ続けた指示を理解して行動できる"
+  },
+  {
+    "lang": "ja",
+    "stage": 2,
+    "skill": "listening",
+    "text": "JLPT N5の聴解問題で6割正解する"
+  },
+  {
+    "lang": "ja",
+    "stage": 2,
+    "skill": "speaking",
+    "text": "その日にあったことを3文で順序立てて話せる"
+  },
+  {
+    "lang": "ja",
+    "stage": 2,
+    "skill": "speaking",
+    "text": "身近な話題で相手と数往復のやりとりができる"
+  },
+  {
+    "lang": "ja",
+    "stage": 2,
+    "skill": "reading",
+    "text": "ひらがな・カタカナの短い本を1冊一人で読み切る"
+  },
+  {
+    "lang": "ja",
+    "stage": 2,
+    "skill": "reading",
+    "text": "小1〜2配当漢字(100字程度)を読める"
+  },
+  {
+    "lang": "ja",
+    "stage": 2,
+    "skill": "reading",
+    "text": "漢検10級に合格する"
+  },
+  {
+    "lang": "ja",
+    "stage": 2,
+    "skill": "writing",
+    "text": "カタカナと小1〜2配当漢字を書ける"
+  },
+  {
+    "lang": "ja",
+    "stage": 2,
+    "skill": "writing",
+    "text": "「いつ・どこで・なにをした」を入れた3文以上の文を書ける"
+  },
+  {
+    "lang": "ja",
+    "stage": 3,
+    "skill": "listening",
+    "text": "まとまった説明を聞いて要点を自分の言葉で言い直せる"
+  },
+  {
+    "lang": "ja",
+    "stage": 3,
+    "skill": "listening",
+    "text": "JLPT N4の聴解問題で6割正解する"
+  },
+  {
+    "lang": "ja",
+    "stage": 3,
+    "skill": "speaking",
+    "text": "経験や考えを「はじめ・なか・おわり」で発表できる"
+  },
+  {
+    "lang": "ja",
+    "stage": 3,
+    "skill": "speaking",
+    "text": "理由を1つ添えて自分の意見を言える"
+  },
+  {
+    "lang": "ja",
+    "stage": 3,
+    "skill": "reading",
+    "text": "150ページ程度の児童書を1冊読み切る"
+  },
+  {
+    "lang": "ja",
+    "stage": 3,
+    "skill": "reading",
+    "text": "小3〜4配当漢字を読める"
+  },
+  {
+    "lang": "ja",
+    "stage": 3,
+    "skill": "reading",
+    "text": "漢検8級に合格する"
+  },
+  {
+    "lang": "ja",
+    "stage": 3,
+    "skill": "writing",
+    "text": "段落を分けて400字程度の文章を書ける"
+  },
+  {
+    "lang": "ja",
+    "stage": 3,
+    "skill": "writing",
+    "text": "小3〜4配当漢字を使って文章を書ける"
+  },
+  {
+    "lang": "ja",
+    "stage": 4,
+    "skill": "listening",
+    "text": "講義形式の話を聞いて要点をノートに整理できる"
+  },
+  {
+    "lang": "ja",
+    "stage": 4,
+    "skill": "listening",
+    "text": "ニュースを聞いて話題と要点を説明できる"
+  },
+  {
+    "lang": "ja",
+    "stage": 4,
+    "skill": "listening",
+    "text": "JLPT N3の聴解問題で6割正解する"
+  },
+  {
+    "lang": "ja",
+    "stage": 4,
+    "skill": "speaking",
+    "text": "根拠を示して自分の意見を1分間話せる"
+  },
+  {
+    "lang": "ja",
+    "stage": 4,
+    "skill": "speaking",
+    "text": "相手や場面に応じて敬語で受け答えできる"
+  },
+  {
+    "lang": "ja",
+    "stage": 4,
+    "skill": "reading",
+    "text": "新聞記事や説明文の要点を3行で要約できる"
+  },
+  {
+    "lang": "ja",
+    "stage": 4,
+    "skill": "reading",
+    "text": "小5〜中1配当漢字を読める"
+  },
+  {
+    "lang": "ja",
+    "stage": 4,
+    "skill": "reading",
+    "text": "漢検5級に合格する"
+  },
+  {
+    "lang": "ja",
+    "stage": 4,
+    "skill": "writing",
+    "text": "600〜800字の意見文を構成立てて書ける"
+  },
+  {
+    "lang": "ja",
+    "stage": 4,
+    "skill": "writing",
+    "text": "引用と自分の考えを区別して書ける"
+  },
+  {
+    "lang": "ja",
+    "stage": 5,
+    "skill": "listening",
+    "text": "講演や討論を聞いて複数の論点を整理できる"
+  },
+  {
+    "lang": "ja",
+    "stage": 5,
+    "skill": "listening",
+    "text": "JLPT N2の聴解問題で6割正解する"
+  },
+  {
+    "lang": "ja",
+    "stage": 5,
+    "skill": "speaking",
+    "text": "複数の立場を踏まえて自分の主張を筋道立てて述べられる"
+  },
+  {
+    "lang": "ja",
+    "stage": 5,
+    "skill": "speaking",
+    "text": "初対面の相手と敬語で会話を続けられる"
+  },
+  {
+    "lang": "ja",
+    "stage": 5,
+    "skill": "reading",
+    "text": "新書や評論を読んで論旨を要約できる"
+  },
+  {
+    "lang": "ja",
+    "stage": 5,
+    "skill": "reading",
+    "text": "漢検準2級に合格する"
+  },
+  {
+    "lang": "ja",
+    "stage": 5,
+    "skill": "writing",
+    "text": "800字の小論文を構成立てて書ける"
+  },
+  {
+    "lang": "ja",
+    "stage": 5,
+    "skill": "writing",
+    "text": "敬語を適切に使った依頼・案内の文書を書ける"
+  },
+  {
+    "lang": "ja",
+    "stage": 6,
+    "skill": "listening",
+    "text": "講演や専門的な議論を聞いて論理構成まで把握できる"
+  },
+  {
+    "lang": "ja",
+    "stage": 6,
+    "skill": "listening",
+    "text": "JLPT N1の聴解問題で6割正解する"
+  },
+  {
+    "lang": "ja",
+    "stage": 6,
+    "skill": "speaking",
+    "text": "会議やプレゼンで論点を整理して発言し、質疑に応答できる"
+  },
+  {
+    "lang": "ja",
+    "stage": 6,
+    "skill": "speaking",
+    "text": "抽象的・専門的な話題について立場を明確にして議論できる"
+  },
+  {
+    "lang": "ja",
+    "stage": 6,
+    "skill": "reading",
+    "text": "論説文・専門書・契約文書などを正確に読み取れる"
+  },
+  {
+    "lang": "ja",
+    "stage": 6,
+    "skill": "reading",
+    "text": "漢検2級に合格する"
+  },
+  {
+    "lang": "ja",
+    "stage": 6,
+    "skill": "writing",
+    "text": "仕事のメールや報告書を目的・相手に応じて過不足なく書ける"
+  },
+  {
+    "lang": "ja",
+    "stage": 6,
+    "skill": "writing",
+    "text": "1200字程度の論説文を構成立てて書ける"
+  },
+  {
+    "lang": "en",
+    "stage": 1,
+    "skill": "listening",
+    "text": "色・数・動物など身近な英単語を聞いて絵を指させる"
+  },
+  {
+    "lang": "en",
+    "stage": 1,
+    "skill": "listening",
+    "text": "簡単な指示(Stand up / Touch your nose)に動作で応じる"
+  },
+  {
+    "lang": "en",
+    "stage": 1,
+    "skill": "speaking",
+    "text": "あいさつと \"What's your name?\" に名前を英語で答えられる"
+  },
+  {
+    "lang": "en",
+    "stage": 1,
+    "skill": "speaking",
+    "text": "身近な英単語を10個以上言える"
+  },
+  {
+    "lang": "en",
+    "stage": 1,
+    "skill": "reading",
+    "text": "アルファベット大文字・小文字をすべて読める"
+  },
+  {
+    "lang": "en",
+    "stage": 1,
+    "skill": "reading",
+    "text": "フォニックスの基本音を10個以上言える"
+  },
+  {
+    "lang": "en",
+    "stage": 1,
+    "skill": "writing",
+    "text": "自分の名前をアルファベットで書ける"
+  },
+  {
+    "lang": "en",
+    "stage": 1,
+    "skill": "writing",
+    "text": "アルファベット大文字をすべて書ける"
+  },
+  {
+    "lang": "en",
+    "stage": 2,
+    "skill": "listening",
+    "text": "日常的な指示や質問を聞いて適切に応答できる"
+  },
+  {
+    "lang": "en",
+    "stage": 2,
+    "skill": "listening",
+    "text": "短い英語アニメや朗読音声のあらすじをつかめる"
+  },
+  {
+    "lang": "en",
+    "stage": 2,
+    "skill": "listening",
+    "text": "英検5級の聴解問題で6割正解する"
+  },
+  {
+    "lang": "en",
+    "stage": 2,
+    "skill": "speaking",
+    "text": "今日の出来事を英語3文で話せる"
+  },
+  {
+    "lang": "en",
+    "stage": 2,
+    "skill": "speaking",
+    "text": "相手と身近な話題で数往復のやりとりができる"
+  },
+  {
+    "lang": "en",
+    "stage": 2,
+    "skill": "reading",
+    "text": "フォニックスのルールで知らない単語を読める"
+  },
+  {
+    "lang": "en",
+    "stage": 2,
+    "skill": "reading",
+    "text": "段階別リーダー(ORT Stage 4〜6 / Lexile 〜300L)を1冊一人で読み切る"
+  },
+  {
+    "lang": "en",
+    "stage": 2,
+    "skill": "reading",
+    "text": "英検5級の筆記問題で6割正解する"
+  },
+  {
+    "lang": "en",
+    "stage": 2,
+    "skill": "writing",
+    "text": "自分や家族について3文の英文を書ける"
+  },
+  {
+    "lang": "en",
+    "stage": 2,
+    "skill": "writing",
+    "text": "よく使う基本単語を音から推測してつづれる"
+  },
+  {
+    "lang": "en",
+    "stage": 3,
+    "skill": "listening",
+    "text": "児童向けアニメ・動画を字幕なしで大意理解できる"
+  },
+  {
+    "lang": "en",
+    "stage": 3,
+    "skill": "listening",
+    "text": "英検3級の聴解問題で6割正解する"
+  },
+  {
+    "lang": "en",
+    "stage": 3,
+    "skill": "speaking",
+    "text": "身近な話題について理由を1つ添えて意見を3文以上話せる"
+  },
+  {
+    "lang": "en",
+    "stage": 3,
+    "skill": "speaking",
+    "text": "注文・道案内など日常の用事のやりとりができる"
+  },
+  {
+    "lang": "en",
+    "stage": 3,
+    "skill": "reading",
+    "text": "初級チャプターブック(Magic Tree House / Lexile 300〜600L)を1冊読み切る"
+  },
+  {
+    "lang": "en",
+    "stage": 3,
+    "skill": "reading",
+    "text": "英検3級の長文問題で6割正解する"
+  },
+  {
+    "lang": "en",
+    "stage": 3,
+    "skill": "writing",
+    "text": "5文以上の英語日記を書ける"
+  },
+  {
+    "lang": "en",
+    "stage": 3,
+    "skill": "writing",
+    "text": "英検3級ライティング形式(意見+理由2つ)で25語以上書ける"
+  },
+  {
+    "lang": "en",
+    "stage": 4,
+    "skill": "listening",
+    "text": "映画・海外ドラマを英語字幕付きで楽しめる"
+  },
+  {
+    "lang": "en",
+    "stage": 4,
+    "skill": "listening",
+    "text": "やさしい英語ニュースの要点を聞き取れる"
+  },
+  {
+    "lang": "en",
+    "stage": 4,
+    "skill": "listening",
+    "text": "英検2級の聴解問題で6割正解する"
+  },
+  {
+    "lang": "en",
+    "stage": 4,
+    "skill": "speaking",
+    "text": "学校生活や環境などの話題について1分間意見を話せる"
+  },
+  {
+    "lang": "en",
+    "stage": 4,
+    "skill": "speaking",
+    "text": "英検2級の面接形式で受け答えできる"
+  },
+  {
+    "lang": "en",
+    "stage": 4,
+    "skill": "reading",
+    "text": "児童〜YA向け読み物(Wonder / Lexile 600〜900L)を1冊読み切る"
+  },
+  {
+    "lang": "en",
+    "stage": 4,
+    "skill": "reading",
+    "text": "英検2級の長文問題で6割正解する"
+  },
+  {
+    "lang": "en",
+    "stage": 4,
+    "skill": "writing",
+    "text": "80語程度の意見エッセイ(主張+理由+結論)を書ける"
+  },
+  {
+    "lang": "en",
+    "stage": 4,
+    "skill": "writing",
+    "text": "英語でメールやチャットのやりとりができる"
+  },
+  {
+    "lang": "en",
+    "stage": 5,
+    "skill": "listening",
+    "text": "TED等の講演を字幕なしで大意把握できる"
+  },
+  {
+    "lang": "en",
+    "stage": 5,
+    "skill": "listening",
+    "text": "英検準1級の聴解問題で6割正解する"
+  },
+  {
+    "lang": "en",
+    "stage": 5,
+    "skill": "speaking",
+    "text": "時事問題について2分間、構成立てて意見を述べられる"
+  },
+  {
+    "lang": "en",
+    "stage": 5,
+    "skill": "speaking",
+    "text": "ネイティブ話者との雑談・議論に不自由なく参加できる"
+  },
+  {
+    "lang": "en",
+    "stage": 5,
+    "skill": "reading",
+    "text": "一般向けペーパーバックや英字ニュースを辞書少なめで読める"
+  },
+  {
+    "lang": "en",
+    "stage": 5,
+    "skill": "reading",
+    "text": "英検準1級の長文問題で6割正解する"
+  },
+  {
+    "lang": "en",
+    "stage": 5,
+    "skill": "writing",
+    "text": "120〜150語の構成の整った意見文を書ける"
+  },
+  {
+    "lang": "en",
+    "stage": 5,
+    "skill": "writing",
+    "text": "仕事や学校の連絡メールを不自由なく書ける"
+  },
+  {
+    "lang": "en",
+    "stage": 6,
+    "skill": "listening",
+    "text": "専門的な講演や議論を字幕なしで論点まで理解できる"
+  },
+  {
+    "lang": "en",
+    "stage": 6,
+    "skill": "listening",
+    "text": "英検1級の聴解問題で6割正解する"
+  },
+  {
+    "lang": "en",
+    "stage": 6,
+    "skill": "speaking",
+    "text": "仕事や専門分野の話題について立場を明確にして議論できる"
+  },
+  {
+    "lang": "en",
+    "stage": 6,
+    "skill": "speaking",
+    "text": "会議で意見を述べ、質疑に的確に応答できる"
+  },
+  {
+    "lang": "en",
+    "stage": 6,
+    "skill": "reading",
+    "text": "専門書・論説記事・業務文書を辞書なしで読み通せる"
+  },
+  {
+    "lang": "en",
+    "stage": 6,
+    "skill": "reading",
+    "text": "英検1級の長文問題で6割正解する"
+  },
+  {
+    "lang": "en",
+    "stage": 6,
+    "skill": "writing",
+    "text": "250語程度の論理的なエッセイを書ける"
+  },
+  {
+    "lang": "en",
+    "stage": 6,
+    "skill": "writing",
+    "text": "仕事のメールや報告書を目的・相手に応じて的確に書ける"
+  },
+  {
+    "lang": "zh",
+    "stage": 1,
+    "skill": "listening",
+    "text": "中国語の童謡や声かけ(你好・再见)に反応する"
+  },
+  {
+    "lang": "zh",
+    "stage": 1,
+    "skill": "listening",
+    "text": "「过来」「坐下」など簡単な指示に動作で応じる"
+  },
+  {
+    "lang": "zh",
+    "stage": 1,
+    "skill": "speaking",
+    "text": "「你好」「谢谢」「再见」を場面に合わせて言える"
+  },
+  {
+    "lang": "zh",
+    "stage": 1,
+    "skill": "speaking",
+    "text": "1〜10を中国語で数えられる"
+  },
+  {
+    "lang": "zh",
+    "stage": 1,
+    "skill": "reading",
+    "text": "拼音(声調記号付き)の基本を読める"
+  },
+  {
+    "lang": "zh",
+    "stage": 1,
+    "skill": "reading",
+    "text": "よく見る漢字(大・小・人 など)を5個、中国語読みで読める"
+  },
+  {
+    "lang": "zh",
+    "stage": 1,
+    "skill": "writing",
+    "text": "簡単な漢字(一・二・三 など)をなぞり書きできる"
+  },
+  {
+    "lang": "zh",
+    "stage": 1,
+    "skill": "writing",
+    "text": "声調記号付きで拼音を書き写せる"
+  },
+  {
+    "lang": "zh",
+    "stage": 2,
+    "skill": "listening",
+    "text": "ゆっくりした日常会話(買い物・学校)を聞き取れる"
+  },
+  {
+    "lang": "zh",
+    "stage": 2,
+    "skill": "listening",
+    "text": "HSK1級の聴解問題で6割正解する"
+  },
+  {
+    "lang": "zh",
+    "stage": 2,
+    "skill": "speaking",
+    "text": "名前・年齢・好きなものを中国語で自己紹介できる"
+  },
+  {
+    "lang": "zh",
+    "stage": 2,
+    "skill": "speaking",
+    "text": "日常の定型フレーズで数往復のやりとりができる"
+  },
+  {
+    "lang": "zh",
+    "stage": 2,
+    "skill": "reading",
+    "text": "拼音付き絵本や短文を1冊一人で読み切る"
+  },
+  {
+    "lang": "zh",
+    "stage": 2,
+    "skill": "reading",
+    "text": "HSK1〜2級の基本語(300語程度)を読める"
+  },
+  {
+    "lang": "zh",
+    "stage": 2,
+    "skill": "reading",
+    "text": "HSK2級の読解問題で6割正解する"
+  },
+  {
+    "lang": "zh",
+    "stage": 2,
+    "skill": "writing",
+    "text": "習った漢字で短い文(我喜欢〜 など)を書ける"
+  },
+  {
+    "lang": "zh",
+    "stage": 2,
+    "skill": "writing",
+    "text": "よく使う簡体字を100字書ける"
+  },
+  {
+    "lang": "zh",
+    "stage": 3,
+    "skill": "listening",
+    "text": "中国語のドラマ・動画を中国語字幕付きで大意理解できる"
+  },
+  {
+    "lang": "zh",
+    "stage": 3,
+    "skill": "listening",
+    "text": "HSK3級の聴解問題で6割正解する"
+  },
+  {
+    "lang": "zh",
+    "stage": 3,
+    "skill": "speaking",
+    "text": "身近な話題について理由を1つ添えて中国語で話せる"
+  },
+  {
+    "lang": "zh",
+    "stage": 3,
+    "skill": "speaking",
+    "text": "注文・道案内など実用場面のやりとりができる"
+  },
+  {
+    "lang": "zh",
+    "stage": 3,
+    "skill": "reading",
+    "text": "拼音なしの簡単な文章やSNS投稿を読める"
+  },
+  {
+    "lang": "zh",
+    "stage": 3,
+    "skill": "reading",
+    "text": "HSK3級の読解問題で6割正解する"
+  },
+  {
+    "lang": "zh",
+    "stage": 3,
+    "skill": "writing",
+    "text": "中国語で5文程度の日記・短文を書ける"
+  },
+  {
+    "lang": "zh",
+    "stage": 3,
+    "skill": "writing",
+    "text": "よく使う簡体字を300字書ける"
+  },
+  {
+    "lang": "zh",
+    "stage": 4,
+    "skill": "listening",
+    "text": "中国語ニュースやドラマの大意を字幕なしで掴める"
+  },
+  {
+    "lang": "zh",
+    "stage": 4,
+    "skill": "listening",
+    "text": "HSK4級の聴解問題で6割正解する"
+  },
+  {
+    "lang": "zh",
+    "stage": 4,
+    "skill": "speaking",
+    "text": "社会的な話題について自分の意見を中国語で述べられる"
+  },
+  {
+    "lang": "zh",
+    "stage": 4,
+    "skill": "speaking",
+    "text": "中国語話者と日常会話を不自由なく続けられる"
+  },
+  {
+    "lang": "zh",
+    "stage": 4,
+    "skill": "reading",
+    "text": "中国語の短い記事・物語を辞書を引きながら読み切れる"
+  },
+  {
+    "lang": "zh",
+    "stage": 4,
+    "skill": "reading",
+    "text": "HSK4級の読解問題で6割正解する"
+  },
+  {
+    "lang": "zh",
+    "stage": 4,
+    "skill": "writing",
+    "text": "80字程度の意見・感想を中国語で書ける"
+  },
+  {
+    "lang": "zh",
+    "stage": 4,
+    "skill": "writing",
+    "text": "HSK4級の作文形式(並べ替え・写真作文)に対応できる"
+  },
+  {
+    "lang": "zh",
+    "stage": 5,
+    "skill": "listening",
+    "text": "中国語の講演やニュース討論の要点を字幕なしで掴める"
+  },
+  {
+    "lang": "zh",
+    "stage": 5,
+    "skill": "listening",
+    "text": "HSK5級の聴解問題で6割正解する"
+  },
+  {
+    "lang": "zh",
+    "stage": 5,
+    "skill": "speaking",
+    "text": "社会的な話題について根拠を示して2分間話せる"
+  },
+  {
+    "lang": "zh",
+    "stage": 5,
+    "skill": "speaking",
+    "text": "中国語話者と抽象的な話題でも議論を続けられる"
+  },
+  {
+    "lang": "zh",
+    "stage": 5,
+    "skill": "reading",
+    "text": "中国語の新聞記事や評論を辞書少なめで読める"
+  },
+  {
+    "lang": "zh",
+    "stage": 5,
+    "skill": "reading",
+    "text": "HSK5級の読解問題で6割正解する"
+  },
+  {
+    "lang": "zh",
+    "stage": 5,
+    "skill": "writing",
+    "text": "構成の整った意見文(400字程度)を中国語で書ける"
+  },
+  {
+    "lang": "zh",
+    "stage": 5,
+    "skill": "writing",
+    "text": "連絡・依頼のメールを中国語で書ける"
+  },
+  {
+    "lang": "zh",
+    "stage": 6,
+    "skill": "listening",
+    "text": "専門的な講演や討論を字幕なしで論点まで理解できる"
+  },
+  {
+    "lang": "zh",
+    "stage": 6,
+    "skill": "listening",
+    "text": "HSK6級の聴解問題で6割正解する"
+  },
+  {
+    "lang": "zh",
+    "stage": 6,
+    "skill": "speaking",
+    "text": "仕事や専門分野の話題について立場を明確にして議論できる"
+  },
+  {
+    "lang": "zh",
+    "stage": 6,
+    "skill": "speaking",
+    "text": "会議で意見を述べ、質疑に応答できる"
+  },
+  {
+    "lang": "zh",
+    "stage": 6,
+    "skill": "reading",
+    "text": "中国語の論説記事・専門書・業務文書を読み通せる"
+  },
+  {
+    "lang": "zh",
+    "stage": 6,
+    "skill": "reading",
+    "text": "HSK6級の読解問題で6割正解する"
+  },
+  {
+    "lang": "zh",
+    "stage": 6,
+    "skill": "writing",
+    "text": "仕事のメールや報告書を中国語で過不足なく書ける"
+  },
+  {
+    "lang": "zh",
+    "stage": 6,
+    "skill": "writing",
+    "text": "600字程度の論説文を中国語で構成立てて書ける"
+  },
+  {
+    "lang": "ko",
+    "stage": 1,
+    "skill": "listening",
+    "text": "韓国語の童謡や声かけ(안녕・고마워)に反応する"
+  },
+  {
+    "lang": "ko",
+    "stage": 1,
+    "skill": "listening",
+    "text": "「이리 와」「앉아」など簡単な指示に動作で応じる"
+  },
+  {
+    "lang": "ko",
+    "stage": 1,
+    "skill": "speaking",
+    "text": "あいさつ(안녕하세요・감사합니다)を場面に合わせて言える"
+  },
+  {
+    "lang": "ko",
+    "stage": 1,
+    "skill": "speaking",
+    "text": "身近なものの名前を10個以上韓国語で言える"
+  },
+  {
+    "lang": "ko",
+    "stage": 1,
+    "skill": "reading",
+    "text": "ハングルの基本の字(반절표)を読める"
+  },
+  {
+    "lang": "ko",
+    "stage": 1,
+    "skill": "reading",
+    "text": "ハングルの短い言葉や絵本の単語を拾い読みできる"
+  },
+  {
+    "lang": "ko",
+    "stage": 1,
+    "skill": "writing",
+    "text": "自分の名前をハングルで書ける"
+  },
+  {
+    "lang": "ko",
+    "stage": 1,
+    "skill": "writing",
+    "text": "基本のハングル(母音・子音)をなぞって書ける"
+  },
+  {
+    "lang": "ko",
+    "stage": 2,
+    "skill": "listening",
+    "text": "ゆっくりした日常会話(買い物・あいさつ)を聞き取れる"
+  },
+  {
+    "lang": "ko",
+    "stage": 2,
+    "skill": "listening",
+    "text": "TOPIK I(1級レベル)の聴解問題で6割正解する"
+  },
+  {
+    "lang": "ko",
+    "stage": 2,
+    "skill": "speaking",
+    "text": "名前・年齢・好きなものを韓国語で自己紹介できる"
+  },
+  {
+    "lang": "ko",
+    "stage": 2,
+    "skill": "speaking",
+    "text": "日常の定型フレーズで数往復のやりとりができる"
+  },
+  {
+    "lang": "ko",
+    "stage": 2,
+    "skill": "reading",
+    "text": "ハングルの短い本を1冊一人で読み切る"
+  },
+  {
+    "lang": "ko",
+    "stage": 2,
+    "skill": "reading",
+    "text": "基本の助詞・語尾を手がかりに短文を読める"
+  },
+  {
+    "lang": "ko",
+    "stage": 2,
+    "skill": "reading",
+    "text": "ハングル検定5級に合格する"
+  },
+  {
+    "lang": "ko",
+    "stage": 2,
+    "skill": "writing",
+    "text": "パッチムを含む単語を正しく書ける"
+  },
+  {
+    "lang": "ko",
+    "stage": 2,
+    "skill": "writing",
+    "text": "「私は〜が好きです」など短い文を3文書ける"
+  },
+  {
+    "lang": "ko",
+    "stage": 3,
+    "skill": "listening",
+    "text": "韓国語のドラマ・動画を韓国語字幕付きで大意理解できる"
+  },
+  {
+    "lang": "ko",
+    "stage": 3,
+    "skill": "listening",
+    "text": "TOPIK I(2級レベル)の聴解問題で6割正解する"
+  },
+  {
+    "lang": "ko",
+    "stage": 3,
+    "skill": "speaking",
+    "text": "身近な話題について理由を1つ添えて韓国語で話せる"
+  },
+  {
+    "lang": "ko",
+    "stage": 3,
+    "skill": "speaking",
+    "text": "注文・道案内など実用場面のやりとりができる"
+  },
+  {
+    "lang": "ko",
+    "stage": 3,
+    "skill": "reading",
+    "text": "韓国語の簡単な文章やSNS投稿を読める"
+  },
+  {
+    "lang": "ko",
+    "stage": 3,
+    "skill": "reading",
+    "text": "TOPIK I(2級レベル)の読解問題で6割正解する"
+  },
+  {
+    "lang": "ko",
+    "stage": 3,
+    "skill": "reading",
+    "text": "ハングル検定4級に合格する"
+  },
+  {
+    "lang": "ko",
+    "stage": 3,
+    "skill": "writing",
+    "text": "韓国語で5文程度の日記・短文を書ける"
+  },
+  {
+    "lang": "ko",
+    "stage": 3,
+    "skill": "writing",
+    "text": "分かち書き(띄어쓰기)を意識して文を書ける"
+  },
+  {
+    "lang": "ko",
+    "stage": 4,
+    "skill": "listening",
+    "text": "韓国語ニュースやドラマの大意を字幕なしで掴める"
+  },
+  {
+    "lang": "ko",
+    "stage": 4,
+    "skill": "listening",
+    "text": "TOPIK II 3級レベルの聴解問題で6割正解する"
+  },
+  {
+    "lang": "ko",
+    "stage": 4,
+    "skill": "speaking",
+    "text": "社会的な話題について自分の意見を韓国語で述べられる"
+  },
+  {
+    "lang": "ko",
+    "stage": 4,
+    "skill": "speaking",
+    "text": "韓国語話者と日常会話を不自由なく続けられる"
+  },
+  {
+    "lang": "ko",
+    "stage": 4,
+    "skill": "reading",
+    "text": "韓国語の短い記事・物語を辞書を引きながら読み切れる"
+  },
+  {
+    "lang": "ko",
+    "stage": 4,
+    "skill": "reading",
+    "text": "TOPIK II 3級レベルの読解問題で6割正解する"
+  },
+  {
+    "lang": "ko",
+    "stage": 4,
+    "skill": "writing",
+    "text": "200〜300字の意見・感想を韓国語で書ける"
+  },
+  {
+    "lang": "ko",
+    "stage": 4,
+    "skill": "writing",
+    "text": "敬語(존댓말)と반말を使い分けて書ける"
+  },
+  {
+    "lang": "ko",
+    "stage": 5,
+    "skill": "listening",
+    "text": "韓国語の講演やニュース討論の要点を字幕なしで掴める"
+  },
+  {
+    "lang": "ko",
+    "stage": 5,
+    "skill": "listening",
+    "text": "TOPIK II 4〜5級レベルの聴解問題で6割正解する"
+  },
+  {
+    "lang": "ko",
+    "stage": 5,
+    "skill": "speaking",
+    "text": "社会的な話題について根拠を示して2分間話せる"
+  },
+  {
+    "lang": "ko",
+    "stage": 5,
+    "skill": "speaking",
+    "text": "韓国語話者と抽象的な話題でも議論を続けられる"
+  },
+  {
+    "lang": "ko",
+    "stage": 5,
+    "skill": "reading",
+    "text": "韓国語の新聞記事や評論を辞書少なめで読める"
+  },
+  {
+    "lang": "ko",
+    "stage": 5,
+    "skill": "reading",
+    "text": "TOPIK II 4〜5級レベルの読解問題で6割正解する"
+  },
+  {
+    "lang": "ko",
+    "stage": 5,
+    "skill": "writing",
+    "text": "構成の整った意見文(400〜600字)を韓国語で書ける"
+  },
+  {
+    "lang": "ko",
+    "stage": 5,
+    "skill": "writing",
+    "text": "連絡・依頼のメールを韓国語で書ける"
+  },
+  {
+    "lang": "ko",
+    "stage": 6,
+    "skill": "listening",
+    "text": "専門的な講演や討論を字幕なしで論点まで理解できる"
+  },
+  {
+    "lang": "ko",
+    "stage": 6,
+    "skill": "listening",
+    "text": "TOPIK II 6級レベルの聴解問題で6割正解する"
+  },
+  {
+    "lang": "ko",
+    "stage": 6,
+    "skill": "speaking",
+    "text": "仕事や専門分野の話題について立場を明確にして議論できる"
+  },
+  {
+    "lang": "ko",
+    "stage": 6,
+    "skill": "speaking",
+    "text": "会議で意見を述べ、質疑に応答できる"
+  },
+  {
+    "lang": "ko",
+    "stage": 6,
+    "skill": "reading",
+    "text": "韓国語の論説記事・専門書・業務文書を読み通せる"
+  },
+  {
+    "lang": "ko",
+    "stage": 6,
+    "skill": "reading",
+    "text": "TOPIK II 6級レベルの読解問題で6割正解する"
+  },
+  {
+    "lang": "ko",
+    "stage": 6,
+    "skill": "writing",
+    "text": "仕事のメールや報告書を韓国語で過不足なく書ける"
+  },
+  {
+    "lang": "ko",
+    "stage": 6,
+    "skill": "writing",
+    "text": "600字程度の論説文を韓国語で構成立てて書ける"
+  },
+  {
+    "lang": "pt",
+    "stage": 1,
+    "skill": "listening",
+    "text": "ポルトガル語の童謡や声かけ(oi・obrigado)に反応する"
+  },
+  {
+    "lang": "pt",
+    "stage": 1,
+    "skill": "listening",
+    "text": "「vem cá」「senta」など簡単な指示に動作で応じる"
+  },
+  {
+    "lang": "pt",
+    "stage": 1,
+    "skill": "speaking",
+    "text": "あいさつ(bom dia・obrigado・tchau)を場面に合わせて言える"
+  },
+  {
+    "lang": "pt",
+    "stage": 1,
+    "skill": "speaking",
+    "text": "身近なものの名前を10個以上ポルトガル語で言える"
+  },
+  {
+    "lang": "pt",
+    "stage": 1,
+    "skill": "reading",
+    "text": "アルファベットと基本の文字・音の対応を読める"
+  },
+  {
+    "lang": "pt",
+    "stage": 1,
+    "skill": "reading",
+    "text": "身近な短い単語を拾い読みできる"
+  },
+  {
+    "lang": "pt",
+    "stage": 1,
+    "skill": "writing",
+    "text": "自分の名前をアルファベットで書ける"
+  },
+  {
+    "lang": "pt",
+    "stage": 1,
+    "skill": "writing",
+    "text": "アルファベット大文字をすべて書ける"
+  },
+  {
+    "lang": "pt",
+    "stage": 2,
+    "skill": "listening",
+    "text": "日常的な指示や質問を聞いて適切に応答できる"
+  },
+  {
+    "lang": "pt",
+    "stage": 2,
+    "skill": "listening",
+    "text": "短い子供向けアニメや朗読音声のあらすじをつかめる"
+  },
+  {
+    "lang": "pt",
+    "stage": 2,
+    "skill": "speaking",
+    "text": "今日の出来事をポルトガル語3文で話せる"
+  },
+  {
+    "lang": "pt",
+    "stage": 2,
+    "skill": "speaking",
+    "text": "相手と身近な話題で数往復のやりとりができる"
+  },
+  {
+    "lang": "pt",
+    "stage": 2,
+    "skill": "reading",
+    "text": "文字と音の対応で知らない単語を読める"
+  },
+  {
+    "lang": "pt",
+    "stage": 2,
+    "skill": "reading",
+    "text": "段階別リーダー(Graded Readers)の初級本を1冊一人で読み切る"
+  },
+  {
+    "lang": "pt",
+    "stage": 2,
+    "skill": "reading",
+    "text": "CEFR A1レベルの読解問題で6割正解する"
+  },
+  {
+    "lang": "pt",
+    "stage": 2,
+    "skill": "writing",
+    "text": "自分や家族について3文のポルトガル語の文を書ける"
+  },
+  {
+    "lang": "pt",
+    "stage": 2,
+    "skill": "writing",
+    "text": "よく使う基本単語を音から推測してつづれる"
+  },
+  {
+    "lang": "pt",
+    "stage": 3,
+    "skill": "listening",
+    "text": "児童向けアニメ・動画を字幕なしで大意理解できる"
+  },
+  {
+    "lang": "pt",
+    "stage": 3,
+    "skill": "listening",
+    "text": "CEFR A2レベルのリスニング問題で6割正解する"
+  },
+  {
+    "lang": "pt",
+    "stage": 3,
+    "skill": "speaking",
+    "text": "身近な話題について理由を1つ添えて意見を3文以上話せる"
+  },
+  {
+    "lang": "pt",
+    "stage": 3,
+    "skill": "speaking",
+    "text": "注文・道案内など日常の用事のやりとりができる"
+  },
+  {
+    "lang": "pt",
+    "stage": 3,
+    "skill": "reading",
+    "text": "子供向けの初級読み物(Turma da Mônica等)を1冊読み切る"
+  },
+  {
+    "lang": "pt",
+    "stage": 3,
+    "skill": "reading",
+    "text": "CEFR A2レベルの読解問題で6割正解する"
+  },
+  {
+    "lang": "pt",
+    "stage": 3,
+    "skill": "writing",
+    "text": "5文以上のポルトガル語日記を書ける"
+  },
+  {
+    "lang": "pt",
+    "stage": 3,
+    "skill": "writing",
+    "text": "意見+理由を添えた短い文章を書ける"
+  },
+  {
+    "lang": "pt",
+    "stage": 4,
+    "skill": "listening",
+    "text": "映画・ドラマを字幕付きで楽しめる"
+  },
+  {
+    "lang": "pt",
+    "stage": 4,
+    "skill": "listening",
+    "text": "やさしいポルトガル語ニュースの要点を聞き取れる"
+  },
+  {
+    "lang": "pt",
+    "stage": 4,
+    "skill": "speaking",
+    "text": "学校生活や環境などの話題について1分間意見を話せる"
+  },
+  {
+    "lang": "pt",
+    "stage": 4,
+    "skill": "speaking",
+    "text": "ネイティブ話者と日常会話を不自由なく続けられる"
+  },
+  {
+    "lang": "pt",
+    "stage": 4,
+    "skill": "reading",
+    "text": "児童〜YA向けの小説を1冊読み切る"
+  },
+  {
+    "lang": "pt",
+    "stage": 4,
+    "skill": "reading",
+    "text": "Celpe-Bras Intermediárioレベルの読解課題に対応できる"
+  },
+  {
+    "lang": "pt",
+    "stage": 4,
+    "skill": "writing",
+    "text": "主張+理由+結論の構成で意見文を書ける"
+  },
+  {
+    "lang": "pt",
+    "stage": 4,
+    "skill": "writing",
+    "text": "ポルトガル語でメールやチャットのやりとりができる"
+  },
+  {
+    "lang": "pt",
+    "stage": 5,
+    "skill": "listening",
+    "text": "講演動画やニュースを字幕なしで大意把握できる"
+  },
+  {
+    "lang": "pt",
+    "stage": 5,
+    "skill": "listening",
+    "text": "Celpe-Bras中上級レベルの聴解課題に対応できる"
+  },
+  {
+    "lang": "pt",
+    "stage": 5,
+    "skill": "speaking",
+    "text": "時事問題について2分間、構成立てて意見を述べられる"
+  },
+  {
+    "lang": "pt",
+    "stage": 5,
+    "skill": "speaking",
+    "text": "ネイティブ話者との議論に不自由なく参加できる"
+  },
+  {
+    "lang": "pt",
+    "stage": 5,
+    "skill": "reading",
+    "text": "一般向けの本やニュース記事を辞書少なめで読める"
+  },
+  {
+    "lang": "pt",
+    "stage": 5,
+    "skill": "reading",
+    "text": "Celpe-Bras中上級レベルの読解課題に対応できる"
+  },
+  {
+    "lang": "pt",
+    "stage": 5,
+    "skill": "writing",
+    "text": "構成の整った意見文(300〜400語)を書ける"
+  },
+  {
+    "lang": "pt",
+    "stage": 5,
+    "skill": "writing",
+    "text": "仕事や学校の連絡メールを不自由なく書ける"
+  },
+  {
+    "lang": "pt",
+    "stage": 6,
+    "skill": "listening",
+    "text": "専門的な講演や議論を字幕なしで論点まで理解できる"
+  },
+  {
+    "lang": "pt",
+    "stage": 6,
+    "skill": "listening",
+    "text": "Celpe-Bras上級レベルの聴解課題に対応できる"
+  },
+  {
+    "lang": "pt",
+    "stage": 6,
+    "skill": "speaking",
+    "text": "仕事や専門分野の話題について立場を明確にして議論できる"
+  },
+  {
+    "lang": "pt",
+    "stage": 6,
+    "skill": "speaking",
+    "text": "会議で意見を述べ、質疑に的確に応答できる"
+  },
+  {
+    "lang": "pt",
+    "stage": 6,
+    "skill": "reading",
+    "text": "ポルトガル語の論説記事・専門書・業務文書を読み通せる"
+  },
+  {
+    "lang": "pt",
+    "stage": 6,
+    "skill": "reading",
+    "text": "Celpe-Bras上級レベルの読解課題に対応できる"
+  },
+  {
+    "lang": "pt",
+    "stage": 6,
+    "skill": "writing",
+    "text": "仕事のメールや報告書をポルトガル語で過不足なく書ける"
+  },
+  {
+    "lang": "pt",
+    "stage": 6,
+    "skill": "writing",
+    "text": "論理的な論説文を構成立てて書ける"
+  },
+  {
+    "lang": "es",
+    "stage": 1,
+    "skill": "listening",
+    "text": "スペイン語の童謡や声かけ(hola・gracias)に反応する"
+  },
+  {
+    "lang": "es",
+    "stage": 1,
+    "skill": "listening",
+    "text": "「ven aquí」「siéntate」など簡単な指示に動作で応じる"
+  },
+  {
+    "lang": "es",
+    "stage": 1,
+    "skill": "speaking",
+    "text": "あいさつ(buenos días・gracias・adiós)を場面に合わせて言える"
+  },
+  {
+    "lang": "es",
+    "stage": 1,
+    "skill": "speaking",
+    "text": "身近なものの名前を10個以上スペイン語で言える"
+  },
+  {
+    "lang": "es",
+    "stage": 1,
+    "skill": "reading",
+    "text": "アルファベットと基本の文字・音の対応を読める"
+  },
+  {
+    "lang": "es",
+    "stage": 1,
+    "skill": "reading",
+    "text": "身近な短い単語を拾い読みできる"
+  },
+  {
+    "lang": "es",
+    "stage": 1,
+    "skill": "writing",
+    "text": "自分の名前をアルファベットで書ける"
+  },
+  {
+    "lang": "es",
+    "stage": 1,
+    "skill": "writing",
+    "text": "アルファベット大文字をすべて書ける"
+  },
+  {
+    "lang": "es",
+    "stage": 2,
+    "skill": "listening",
+    "text": "日常的な指示や質問を聞いて適切に応答できる"
+  },
+  {
+    "lang": "es",
+    "stage": 2,
+    "skill": "listening",
+    "text": "短い子供向けアニメや朗読音声のあらすじをつかめる"
+  },
+  {
+    "lang": "es",
+    "stage": 2,
+    "skill": "listening",
+    "text": "DELE A1レベルのリスニング問題で6割正解する"
+  },
+  {
+    "lang": "es",
+    "stage": 2,
+    "skill": "speaking",
+    "text": "今日の出来事をスペイン語3文で話せる"
+  },
+  {
+    "lang": "es",
+    "stage": 2,
+    "skill": "speaking",
+    "text": "相手と身近な話題で数往復のやりとりができる"
+  },
+  {
+    "lang": "es",
+    "stage": 2,
+    "skill": "reading",
+    "text": "文字と音の対応で知らない単語を読める"
+  },
+  {
+    "lang": "es",
+    "stage": 2,
+    "skill": "reading",
+    "text": "段階別リーダー(Graded Readers)の初級本を1冊一人で読み切る"
+  },
+  {
+    "lang": "es",
+    "stage": 2,
+    "skill": "reading",
+    "text": "DELE A1レベルの読解問題で6割正解する"
+  },
+  {
+    "lang": "es",
+    "stage": 2,
+    "skill": "writing",
+    "text": "自分や家族について3文のスペイン語の文を書ける"
+  },
+  {
+    "lang": "es",
+    "stage": 2,
+    "skill": "writing",
+    "text": "よく使う基本単語を音から推測してつづれる"
+  },
+  {
+    "lang": "es",
+    "stage": 3,
+    "skill": "listening",
+    "text": "児童向けアニメ・動画を字幕なしで大意理解できる"
+  },
+  {
+    "lang": "es",
+    "stage": 3,
+    "skill": "listening",
+    "text": "DELE A2レベルのリスニング問題で6割正解する"
+  },
+  {
+    "lang": "es",
+    "stage": 3,
+    "skill": "speaking",
+    "text": "身近な話題について理由を1つ添えて意見を3文以上話せる"
+  },
+  {
+    "lang": "es",
+    "stage": 3,
+    "skill": "speaking",
+    "text": "注文・道案内など日常の用事のやりとりができる"
+  },
+  {
+    "lang": "es",
+    "stage": 3,
+    "skill": "reading",
+    "text": "子供向けの初級読み物(Leo Leo誌等)を1冊読み切る"
+  },
+  {
+    "lang": "es",
+    "stage": 3,
+    "skill": "reading",
+    "text": "DELE A2レベルの読解問題で6割正解する"
+  },
+  {
+    "lang": "es",
+    "stage": 3,
+    "skill": "writing",
+    "text": "5文以上のスペイン語日記を書ける"
+  },
+  {
+    "lang": "es",
+    "stage": 3,
+    "skill": "writing",
+    "text": "意見+理由を添えた短い文章を書ける"
+  },
+  {
+    "lang": "es",
+    "stage": 4,
+    "skill": "listening",
+    "text": "映画・ドラマを字幕付きで楽しめる"
+  },
+  {
+    "lang": "es",
+    "stage": 4,
+    "skill": "listening",
+    "text": "やさしいスペイン語ニュース(News in Slow Spanish等)の要点を聞き取れる"
+  },
+  {
+    "lang": "es",
+    "stage": 4,
+    "skill": "listening",
+    "text": "DELE B1レベルのリスニング問題で6割正解する"
+  },
+  {
+    "lang": "es",
+    "stage": 4,
+    "skill": "speaking",
+    "text": "学校生活や環境などの話題について1分間意見を話せる"
+  },
+  {
+    "lang": "es",
+    "stage": 4,
+    "skill": "speaking",
+    "text": "ネイティブ話者と日常会話を不自由なく続けられる"
+  },
+  {
+    "lang": "es",
+    "stage": 4,
+    "skill": "reading",
+    "text": "児童〜YA向けの小説を1冊読み切る"
+  },
+  {
+    "lang": "es",
+    "stage": 4,
+    "skill": "reading",
+    "text": "DELE B1レベルの読解問題で6割正解する"
+  },
+  {
+    "lang": "es",
+    "stage": 4,
+    "skill": "writing",
+    "text": "主張+理由+結論の構成で意見文を書ける"
+  },
+  {
+    "lang": "es",
+    "stage": 4,
+    "skill": "writing",
+    "text": "スペイン語でメールやチャットのやりとりができる"
+  },
+  {
+    "lang": "es",
+    "stage": 5,
+    "skill": "listening",
+    "text": "講演動画やニュースを字幕なしで大意把握できる"
+  },
+  {
+    "lang": "es",
+    "stage": 5,
+    "skill": "listening",
+    "text": "DELE B2レベルのリスニング問題で6割正解する"
+  },
+  {
+    "lang": "es",
+    "stage": 5,
+    "skill": "speaking",
+    "text": "時事問題について2分間、構成立てて意見を述べられる"
+  },
+  {
+    "lang": "es",
+    "stage": 5,
+    "skill": "speaking",
+    "text": "ネイティブ話者との議論に不自由なく参加できる"
+  },
+  {
+    "lang": "es",
+    "stage": 5,
+    "skill": "reading",
+    "text": "一般向けの本やニュース記事を辞書少なめで読める"
+  },
+  {
+    "lang": "es",
+    "stage": 5,
+    "skill": "reading",
+    "text": "DELE B2レベルの読解問題で6割正解する"
+  },
+  {
+    "lang": "es",
+    "stage": 5,
+    "skill": "writing",
+    "text": "構成の整った意見文(300〜400語)を書ける"
+  },
+  {
+    "lang": "es",
+    "stage": 5,
+    "skill": "writing",
+    "text": "仕事や学校の連絡メールを不自由なく書ける"
+  },
+  {
+    "lang": "es",
+    "stage": 6,
+    "skill": "listening",
+    "text": "専門的な講演や議論を字幕なしで論点まで理解できる"
+  },
+  {
+    "lang": "es",
+    "stage": 6,
+    "skill": "listening",
+    "text": "DELE C1レベルのリスニング問題で6割正解する"
+  },
+  {
+    "lang": "es",
+    "stage": 6,
+    "skill": "speaking",
+    "text": "仕事や専門分野の話題について立場を明確にして議論できる"
+  },
+  {
+    "lang": "es",
+    "stage": 6,
+    "skill": "speaking",
+    "text": "会議で意見を述べ、質疑に的確に応答できる"
+  },
+  {
+    "lang": "es",
+    "stage": 6,
+    "skill": "reading",
+    "text": "スペイン語の論説記事・専門書・業務文書を読み通せる"
+  },
+  {
+    "lang": "es",
+    "stage": 6,
+    "skill": "reading",
+    "text": "DELE C1レベルの読解問題で6割正解する"
+  },
+  {
+    "lang": "es",
+    "stage": 6,
+    "skill": "writing",
+    "text": "仕事のメールや報告書をスペイン語で過不足なく書ける"
+  },
+  {
+    "lang": "es",
+    "stage": 6,
+    "skill": "writing",
+    "text": "論理的な論説文を構成立てて書ける"
+  }
+]

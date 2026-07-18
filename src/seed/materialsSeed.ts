@@ -1,84 +1,14 @@
 import type { Material } from '../types'
+import materialsData from './content/materials.json'
 
 /**
- * 推奨教材の初期テンプレート(6言語 × 8〜10点 ≒ 59点)。
+ * 推奨教材のシード。
+ * 実データは src/seed/content/materials.json が正で、CSVで編集できる:
+ *   npm run content:export → content/materials.csv(Excel等で編集)
+ *   npm run content:import → 編集済みCSVを取り込み JSON を再生成
  *
- * 設計方針(docs/level-design.md に準拠):
- * - 各言語に「現地教材(origin: 'local')」を最低3点、「大人向け教材(audience: 'adult')」を最低3点含める
- * - stages は対象段階(STAGES.idx 1〜6)を明示する
- * - audience: 'child' | 'adult' | 'all' / origin: 'japan'(日本で入手しやすい) | 'local'(現地教材)
- * - 実在する定番教材のみを掲載する(不確かな固有名詞は「段階別リーダー」等の一般名称にする)
- * - 編集・追加・削除はロードマップ画面から自由に行える
+ * コンテンツの設計方針(docs/level-design.md に準拠):
+ * - 各言語に「現地教材(origin: 'local')」最低3点・「大人向け(audience: 'adult')」最低3点
+ * - 実在する定番教材のみ(不確かな固有名詞は「段階別リーダー」等の一般名称に)
  */
-export const MATERIALS_SEED: Material[] = [
-  // ==================== 日本語 ====================
-  { id: 'm-ja-01', title: '読み聞かせ絵本(福音館・偕成社 等)', type: 'book', languages: ['ja'], skills: ['listening', 'reading'], stages: [1], audience: 'child', origin: 'local', note: '毎日10分。語彙と物語の土台づくり' },
-  { id: 'm-ja-02', title: 'くもん ひらがな・カタカナドリル', type: 'workbook', languages: ['ja'], skills: ['writing'], stages: [1, 2], audience: 'child', origin: 'japan', note: '運筆からひらがな・カタカナへ段階的に' },
-  { id: 'm-ja-03', title: '光村図書 国語教科書', type: 'book', languages: ['ja'], skills: ['reading', 'writing'], stages: [2, 3, 4, 5], audience: 'child', origin: 'local', note: '学年相当の定番教材。音読・視写にも使える' },
-  { id: 'm-ja-04', title: 'かいけつゾロリ シリーズ', type: 'book', languages: ['ja'], skills: ['reading'], stages: [2, 3], audience: 'child', origin: 'local', note: '一人読みへの移行に最適' },
-  { id: 'm-ja-05', title: '音読・漢字ドリル', type: 'workbook', languages: ['ja'], skills: ['reading', 'writing'], stages: [2, 3, 4], audience: 'child', origin: 'japan', note: '毎日1ページ。流暢さと漢字の定着' },
-  { id: 'm-ja-06', title: '漢検 ステップ シリーズ', type: 'workbook', languages: ['ja'], skills: ['reading', 'writing'], stages: [2, 3, 4, 5, 6], audience: 'all', origin: 'japan', note: '学年相当の級を年1回受検すると目安になる' },
-  { id: 'm-ja-07', title: '子ども新聞(朝日小学生新聞 等)', type: 'book', languages: ['ja'], skills: ['reading'], stages: [3, 4], audience: 'child', origin: 'local', note: '説明文・時事語彙のインプット' },
-  { id: 'm-ja-08', title: 'みんなの日本語', type: 'book', languages: ['ja'], skills: ['listening', 'speaking', 'reading', 'writing'], stages: [2, 3], audience: 'adult', origin: 'japan', note: '外国語として日本語を学ぶ大人向けの定番教科書' },
-  { id: 'm-ja-09', title: 'JLPT公式問題集', type: 'workbook', languages: ['ja'], skills: ['reading', 'listening'], stages: [2, 3, 4, 5, 6], audience: 'adult', origin: 'japan', note: 'N5〜N1。検定で目標設定。大人の学び直しにも' },
-  { id: 'm-ja-10', title: 'ちくまプリマー新書 等の新書', type: 'book', languages: ['ja'], skills: ['reading'], stages: [5, 6], audience: 'adult', origin: 'local', note: '評論文・論説文への入り口として' },
-
-  // ==================== 英語 ====================
-  { id: 'm-en-01', title: 'Super Simple Songs', type: 'video', languages: ['en'], skills: ['listening', 'speaking'], stages: [1], audience: 'child', origin: 'local', url: 'https://supersimple.com/', note: '歌でインプット。親子で一緒に歌うのが効果的' },
-  { id: 'm-en-02', title: 'Peppa Pig(英語版)', type: 'video', languages: ['en'], skills: ['listening'], stages: [1, 2], audience: 'child', origin: 'local', note: '短くて日常語彙が豊富。英語のまま見せる' },
-  { id: 'm-en-03', title: 'Oxford Reading Tree(ORT)', type: 'book', languages: ['en'], skills: ['reading'], stages: [1, 2, 3], audience: 'child', origin: 'local', note: '段階別多読の定番。Stage 1から週3冊ペースで' },
-  { id: 'm-en-04', title: 'Raz-Kids', type: 'app', languages: ['en'], skills: ['reading', 'listening'], stages: [2, 3, 4], audience: 'child', origin: 'local', url: 'https://www.raz-kids.com/', note: 'レベル別電子書籍。音声付きで多読量を稼げる' },
-  { id: 'm-en-05', title: 'Magic Tree House', type: 'book', languages: ['en'], skills: ['reading'], stages: [3, 4], audience: 'child', origin: 'local', note: '初級チャプターブックの定番' },
-  { id: 'm-en-06', title: '英検 でる順パス単(5級〜)', type: 'workbook', languages: ['en'], skills: ['reading'], stages: [2, 3, 4], audience: 'all', origin: 'japan', note: '級別の語彙対策に。目標設定しやすい' },
-  { id: 'm-en-07', title: 'オンライン英会話(子供向け)', type: 'online-lesson', languages: ['en'], skills: ['speaking', 'listening'], stages: [1, 2, 3, 4], audience: 'child', origin: 'local', note: 'Novakid・QQキッズ等。週1〜2回の発話機会を確保' },
-  { id: 'm-en-08', title: 'BBC Learning English', type: 'video', languages: ['en'], skills: ['listening', 'reading'], stages: [4, 5, 6], audience: 'adult', origin: 'local', url: 'https://www.bbc.co.uk/learningenglish', note: 'ニュース英語への橋渡し。大人の学び直しに' },
-  { id: 'm-en-09', title: 'TED / TED-Ed', type: 'video', languages: ['en'], skills: ['listening'], stages: [5, 6], audience: 'adult', origin: 'local', url: 'https://www.ted.com/', note: 'アカデミックな講演で多聴。字幕の有無を段階的に調整' },
-  { id: 'm-en-10', title: 'IELTS公式問題集(Cambridge)', type: 'workbook', languages: ['en'], skills: ['listening', 'speaking', 'reading', 'writing'], stages: [5, 6], audience: 'adult', origin: 'japan', note: '海外大学出願・4技能の総仕上げに' },
-
-  // ==================== 中国語(標準語) ====================
-  { id: 'm-zh-01', title: '中国語童謡(儿歌)', type: 'video', languages: ['zh'], skills: ['listening'], stages: [1], audience: 'child', origin: 'local', note: '声調の音感づくり。かけ流しでOK' },
-  { id: 'm-zh-02', title: 'Little Fox Chinese', type: 'app', languages: ['zh'], skills: ['listening', 'reading'], stages: [1, 2, 3], audience: 'child', origin: 'local', url: 'https://chinese.littlefox.com/', note: 'レベル別アニメ絵本。多聴多読に' },
-  { id: 'm-zh-03', title: '四五快读', type: 'book', languages: ['zh'], skills: ['reading'], stages: [1, 2, 3], audience: 'child', origin: 'local', note: '漢字認識のロングセラー教材' },
-  { id: 'm-zh-04', title: '部编版语文教科書', type: 'book', languages: ['zh'], skills: ['reading', 'writing'], stages: [2, 3, 4, 5], audience: 'all', origin: 'local', note: '中国の国語教科書。学年相当の読み書きに' },
-  { id: 'm-zh-05', title: '拼音学習アプリ(悟空拼音 等)', type: 'app', languages: ['zh'], skills: ['reading'], stages: [1, 2], audience: 'child', origin: 'local', note: 'ゲーム感覚で拼音を習得' },
-  { id: 'm-zh-06', title: 'YCT公式テキスト', type: 'workbook', languages: ['zh'], skills: ['reading', 'listening'], stages: [1, 2], audience: 'all', origin: 'japan', note: '子供向け検定で目標設定しやすい' },
-  { id: 'm-zh-07', title: 'オンライン中国語レッスン(子供向け)', type: 'online-lesson', languages: ['zh'], skills: ['speaking', 'listening'], stages: [1, 2, 3, 4], audience: 'child', origin: 'local', note: 'CCレッスン等。週1回の発話機会を確保' },
-  { id: 'm-zh-08', title: 'HSK標準教程(标准教程)', type: 'workbook', languages: ['zh'], skills: ['reading', 'writing', 'listening'], stages: [2, 3, 4, 5, 6], audience: 'adult', origin: 'japan', note: 'HSK対策の定番教科書。大人の学習に' },
-  { id: 'm-zh-09', title: 'HSK公式過去問題集', type: 'workbook', languages: ['zh'], skills: ['reading', 'listening', 'writing'], stages: [3, 4, 5, 6], audience: 'adult', origin: 'japan', note: '検定で到達度を確認。大人の目標設定に' },
-  { id: 'm-zh-10', title: '中国語ニュース・ドラマ(字幕付き)', type: 'video', languages: ['zh'], skills: ['listening'], stages: [4, 5, 6], audience: 'adult', origin: 'local', note: '中国語字幕付きで大量インプット' },
-
-  // ==================== 韓国語 ====================
-  { id: 'm-ko-01', title: '韓国語童謡・アニメ(뽀로로 等)', type: 'video', languages: ['ko'], skills: ['listening'], stages: [1], audience: 'child', origin: 'local', note: 'ハングルの音に親しむ。かけ流しでOK' },
-  { id: 'm-ko-02', title: '韓国の童話・絵本(전래동화 等)', type: 'book', languages: ['ko'], skills: ['reading', 'listening'], stages: [1, 2, 3], audience: 'child', origin: 'local', note: '読み聞かせから一人読みへ' },
-  { id: 'm-ko-03', title: '韓国 国定国語教科書(초등 국어)', type: 'book', languages: ['ko'], skills: ['reading', 'writing'], stages: [2, 3, 4], audience: 'child', origin: 'local', note: '学年相当の読み書きに。現地の国語教材' },
-  { id: 'm-ko-04', title: 'ハングル書き取りドリル', type: 'workbook', languages: ['ko'], skills: ['writing'], stages: [1, 2], audience: 'child', origin: 'japan', note: '母音・子音・パッチムの字形づくり' },
-  { id: 'm-ko-05', title: 'オンライン韓国語レッスン', type: 'online-lesson', languages: ['ko'], skills: ['speaking', 'listening'], stages: [2, 3, 4, 5], audience: 'all', origin: 'local', note: '週1回の発話機会を確保' },
-  { id: 'm-ko-06', title: 'できる韓国語', type: 'book', languages: ['ko'], skills: ['listening', 'speaking', 'reading', 'writing'], stages: [2, 3, 4], audience: 'adult', origin: 'japan', note: '大人向けの定番総合教材' },
-  { id: 'm-ko-07', title: 'TOPIK公式過去問題集', type: 'workbook', languages: ['ko'], skills: ['reading', 'listening', 'writing'], stages: [2, 3, 4, 5, 6], audience: 'all', origin: 'japan', note: '検定で目標設定。大人の学習にも' },
-  { id: 'm-ko-08', title: '韓国ドラマ・バラエティ(字幕付き)', type: 'video', languages: ['ko'], skills: ['listening'], stages: [3, 4, 5, 6], audience: 'adult', origin: 'local', note: '韓国語字幕付きで大量インプット' },
-  { id: 'm-ko-09', title: '韓国ニュース・ポッドキャスト', type: 'app', languages: ['ko'], skills: ['listening'], stages: [5, 6], audience: 'adult', origin: 'local', note: '時事語彙と論理的な話し方に触れる' },
-
-  // ==================== ポルトガル語 ====================
-  { id: 'm-pt-01', title: 'Mundo Bita(童謡アニメ)', type: 'video', languages: ['pt'], skills: ['listening'], stages: [1, 2], audience: 'child', origin: 'local', note: 'ブラジルの定番童謡。かけ流しで音に親しむ' },
-  { id: 'm-pt-02', title: 'Palavra Cantada(童謡)', type: 'video', languages: ['pt'], skills: ['listening', 'speaking'], stages: [1, 2], audience: 'child', origin: 'local', note: '歌でインプット。一緒に歌うのが効果的' },
-  { id: 'm-pt-03', title: 'Turma da Mônica(漫画)', type: 'book', languages: ['pt'], skills: ['reading'], stages: [2, 3], audience: 'child', origin: 'local', note: 'ブラジルの定番漫画。一人読みの導入に' },
-  { id: 'm-pt-04', title: 'ブラジル 国語教科書(Língua Portuguesa / BNCC準拠)', type: 'book', languages: ['pt'], skills: ['reading', 'writing'], stages: [2, 3, 4], audience: 'child', origin: 'local', note: '現地の国語教材。学年相当の読み書きに' },
-  { id: 'm-pt-05', title: 'ポルトガル語 段階別リーダー(Leituras graduadas)', type: 'book', languages: ['pt'], skills: ['reading'], stages: [2, 3, 4], audience: 'all', origin: 'local', note: 'レベル別多読で読む量を確保' },
-  { id: 'm-pt-06', title: 'オンラインポルトガル語レッスン', type: 'online-lesson', languages: ['pt'], skills: ['speaking', 'listening'], stages: [2, 3, 4, 5], audience: 'all', origin: 'local', note: '週1回の発話機会を確保' },
-  { id: 'm-pt-07', title: 'ブラジル・ポルトガル語 文法テキスト', type: 'workbook', languages: ['pt'], skills: ['reading', 'writing'], stages: [2, 3, 4], audience: 'adult', origin: 'japan', note: '大人が体系的に文法を固めるのに' },
-  { id: 'm-pt-08', title: 'Globoニュース・Globoplay(字幕付き)', type: 'video', languages: ['pt'], skills: ['listening'], stages: [4, 5, 6], audience: 'adult', origin: 'local', note: '生のニュース・ドラマで大量インプット' },
-  { id: 'm-pt-09', title: 'ポルトガル語ポッドキャスト(Café Brasil 等)', type: 'app', languages: ['pt'], skills: ['listening'], stages: [4, 5, 6], audience: 'adult', origin: 'local', note: '時事・教養テーマで論理的な話し方に触れる' },
-  { id: 'm-pt-10', title: 'Celpe-Bras 対策問題集', type: 'workbook', languages: ['pt'], skills: ['listening', 'reading', 'writing'], stages: [4, 5, 6], audience: 'adult', origin: 'japan', note: '検定で到達度を確認。大人の目標設定に' },
-
-  // ==================== スペイン語 ====================
-  { id: 'm-es-01', title: 'スペイン語童謡(Canticuénticos 等)', type: 'video', languages: ['es'], skills: ['listening'], stages: [1, 2], audience: 'child', origin: 'local', note: '歌で音に親しむ。かけ流し・一緒に歌う' },
-  { id: 'm-es-02', title: 'Leo Leo(児童向け読み物)', type: 'book', languages: ['es'], skills: ['reading'], stages: [2, 3], audience: 'child', origin: 'local', note: '子供向けの読み物で一人読みの導入に' },
-  { id: 'm-es-03', title: 'スペイン語 段階別リーダー(Lecturas graduadas)', type: 'book', languages: ['es'], skills: ['reading'], stages: [2, 3, 4], audience: 'all', origin: 'local', note: 'レベル別多読で読む量を確保' },
-  { id: 'm-es-04', title: 'スペイン語圏 国語教科書(Lengua / Santillana 等)', type: 'book', languages: ['es'], skills: ['reading', 'writing'], stages: [2, 3, 4], audience: 'child', origin: 'local', note: '現地の国語教材。学年相当の読み書きに' },
-  { id: 'm-es-05', title: 'オンラインスペイン語レッスン', type: 'online-lesson', languages: ['es'], skills: ['speaking', 'listening'], stages: [2, 3, 4, 5], audience: 'all', origin: 'local', note: '週1回の発話機会を確保' },
-  { id: 'm-es-06', title: 'DELE・西検 単語帳/文法書', type: 'workbook', languages: ['es'], skills: ['reading', 'writing'], stages: [2, 3, 4], audience: 'all', origin: 'japan', note: '級別の語彙・文法対策に' },
-  { id: 'm-es-07', title: 'News in Slow Spanish', type: 'app', languages: ['es'], skills: ['listening'], stages: [3, 4, 5], audience: 'adult', origin: 'local', url: 'https://www.newsinslowspanish.com/', note: 'ゆっくりのニュースで聞き取りを段階的に' },
-  { id: 'm-es-08', title: 'Notes in Spanish(ポッドキャスト)', type: 'app', languages: ['es'], skills: ['listening'], stages: [3, 4, 5], audience: 'adult', origin: 'local', note: '会話中心のポッドキャスト。大人の学び直しに' },
-  { id: 'm-es-09', title: 'スペイン語ニュース・ドラマ(字幕付き)', type: 'video', languages: ['es'], skills: ['listening'], stages: [4, 5, 6], audience: 'adult', origin: 'local', note: '生のニュース・ドラマで大量インプット' },
-  { id: 'm-es-10', title: 'DELE B2/C1 対策問題集', type: 'workbook', languages: ['es'], skills: ['listening', 'speaking', 'reading', 'writing'], stages: [5, 6], audience: 'adult', origin: 'japan', note: '上位級の4技能総仕上げに' },
-]
+export const MATERIALS_SEED: Material[] = materialsData as unknown as Material[]

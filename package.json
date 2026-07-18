@@ -9,7 +9,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/generate-icons.mjs",
+    "content:export": "node scripts/content-export.mjs",
+    "content:import": "node scripts/content-import.mjs"
   },
   "dependencies": {
     "dexie": "^4.0.8",
