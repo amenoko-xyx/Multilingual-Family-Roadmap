@@ -1,0 +1,7 @@
+{
+  "name": "MFR Design System Generator",
+  "id": "mfr-design-system-generator",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": ["figma"]
+}
