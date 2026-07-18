@@ -47,7 +47,7 @@ export default function HomePage() {
   return (
     <div className="space-y-8">
       {/* メンバーごとに絵柄が変わるグラフィック(言語別の達成バランス+割合メモ付き) */}
-      <GeoBanner className="h-20 sm:h-24" weights={geoWeights} seed={member.id} caption />
+      <GeoBanner className="h-20 sm:h-24" weights={geoWeights} seed={member.id} caption shareable />
 
       {/* メンバーヘッダー */}
       <div className="flex flex-wrap items-end justify-between gap-3 !mt-5">

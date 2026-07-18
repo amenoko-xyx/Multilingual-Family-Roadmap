@@ -69,43 +69,17 @@ function fluidSeam(x: number, h: number, amp: number, ph: number, ra: number, rb
   )
 }
 
+interface GeoScene {
+  fields: { d: string; fill: string }[]
+  motifs: { cx: number; cy: number; m: number; rot: number; s: number; fill: string }[]
+}
+
 /**
- * 言語の色のみで描く、流体的な言語バランスのグラフィック。
- * 左から第一言語(薄)→第三言語(鮮)の大きな面が流れるように並び、
- * 各面の面積が達成数に比例する(=どの言語に傾いているかがパッと分かる)。
- * seed(子供ID)ごとにうねり・モチーフの種類・位置・傾きが変わり、
- * その子だけの絵柄になる。第三言語なし(2言語)にも対応。
- * caption を有効にすると、グラフィック下に言語別の割合をメモ書きする。
+ * 指定サイズのシーン(面+モチーフ)を計算する。画面表示とPNG書き出しで共用。
+ * 同じ seed・weights なら、サイズが変わっても同じ「柄」になる。
  */
-export function GeoBanner({
-  className = '',
-  weights = [],
-  seed = 'default',
-  caption = false,
-}: {
-  className?: string
-  weights?: number[]
-  seed?: string
-  caption?: boolean
-}) {
-  const { langs } = useApp()
-  const ref = useRef<HTMLDivElement>(null)
-  const [size, setSize] = useState({ w: 480, h: 96 })
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const ro = new ResizeObserver(() => {
-      if (el.clientWidth > 0) setSize({ w: el.clientWidth, h: el.clientHeight })
-    })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-
-  const { w, h } = size
-  const n = langs.length
-  const colors = langs.map((_, i) => langStroke(i))
-  const ws = langs.map((_, i) => Math.max(0, weights[i] ?? 0))
+function computeGeoScene(w: number, h: number, ws: number[], seed: string, colors: string[]): GeoScene {
+  const n = ws.length
   const rng = mulberry32(hashSeed(seed))
 
   // 各言語の面積比(達成数に比例、最低10%は確保して存在が見えるように)
@@ -125,9 +99,7 @@ export function GeoBanner({
   const amp = Math.max(6, Math.min(h * 0.22, (Math.min(...ratios) * w) / 2.4))
 
   // 右の面から重ね塗り:最終言語を全面 → 手前の言語ほど後に左側を塗る
-  const fields: { d: string; fill: string }[] = [
-    { d: `M 0 0 L ${w} 0 L ${w} ${h} L 0 ${h} Z`, fill: colors[n - 1] },
-  ]
+  const fields: GeoScene['fields'] = [{ d: `M 0 0 L ${w} 0 L ${w} ${h} L 0 ${h} Z`, fill: colors[n - 1] }]
   const seamParams = bounds.map(() => ({ ph: rng() > 0.5 ? 1 : -1, ra: rng(), rb: rng() }))
   for (let i = n - 2; i >= 0; i--) {
     const p = seamParams[i]
@@ -136,7 +108,7 @@ export function GeoBanner({
 
   // アクセントのモチーフ:各面に1つ、種類・位置・傾き・大きさ・色はシード由来
   const edges = [0, ...bounds, w]
-  const motifs = langs
+  const motifs = ws
     .map((_, i) => {
       const bandW = edges[i + 1] - edges[i]
       const center = (edges[i] + edges[i + 1]) / 2
@@ -152,6 +124,92 @@ export function GeoBanner({
     })
     .filter((m) => m.s > 0.55)
 
+  return { fields, motifs }
+}
+
+/** SNS投稿用の書き出しサイズ(タップして保存) */
+const GEO_EXPORTS = [
+  { key: 'x-post', label: 'Xの投稿', size: '1200×675', w: 1200, h: 675 },
+  { key: 'x-banner', label: 'Xのバナー', size: '1500×500', w: 1500, h: 500 },
+  { key: 'ig-post', label: 'Instagramの投稿', size: '1080×1080', w: 1080, h: 1080 },
+  { key: 'ig-reel', label: 'Instagramのリール', size: '1080×1920', w: 1080, h: 1920 },
+] as const
+
+/** シーンをSVG文字列にする(書き出し用。メモ書きを左下に焼き込む) */
+function geoSvgString(w: number, h: number, ws: number[], seed: string, colors: string[], memo: string): string {
+  const scene = computeGeoScene(w, h, ws, seed, colors)
+  const fields = scene.fields.map((f) => `<path d="${f.d}" fill="${f.fill}"/>`).join('')
+  const motifs = scene.motifs
+    .map((m) => `<path d="${GEO_MOTIFS[m.m]}" transform="translate(${m.cx} ${m.cy}) rotate(${m.rot}) scale(${m.s})" fill="${m.fill}"/>`)
+    .join('')
+  const fontSize = Math.max(18, Math.round(Math.min(w, h) * 0.032))
+  const pad = Math.round(fontSize * 1.2)
+  const text = `<text x="${pad}" y="${h - pad}" font-family="sans-serif" font-size="${fontSize}" font-weight="600" fill="rgba(255,255,255,0.92)">${memo}</text>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${fields}${motifs}${text}</svg>`
+}
+
+/** SVG文字列をPNGにしてダウンロードする */
+async function downloadGeoPng(w: number, h: number, svg: string, filename: string): Promise<void> {
+  const blob: Blob = await new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      canvas.getContext('2d')!.drawImage(img, 0, 0)
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png')
+    }
+    img.onerror = reject
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
+  })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+/**
+ * 言語の色のみで描く、流体的な言語バランスのグラフィック。
+ * 左から第一言語(薄)→第三言語(鮮)の大きな面が流れるように並び、
+ * 各面の面積が達成数に比例する(=どの言語に傾いているかがパッと分かる)。
+ * seed(メンバーID)ごとにうねり・モチーフの種類・位置・傾きが変わり、その人だけの絵柄になる。
+ * caption で割合のメモ書き、shareable でタップ→SNSサイズのPNG保存に対応。
+ */
+export function GeoBanner({
+  className = '',
+  weights = [],
+  seed = 'default',
+  caption = false,
+  shareable = false,
+}: {
+  className?: string
+  weights?: number[]
+  seed?: string
+  caption?: boolean
+  shareable?: boolean
+}) {
+  const { langs, showToast } = useApp()
+  const ref = useRef<HTMLDivElement>(null)
+  const [size, setSize] = useState({ w: 480, h: 96 })
+  const [shareOpen, setShareOpen] = useState(false)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const ro = new ResizeObserver(() => {
+      if (el.clientWidth > 0) setSize({ w: el.clientWidth, h: el.clientHeight })
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const { w, h } = size
+  const colors = langs.map((_, i) => langStroke(i))
+  const ws = langs.map((_, i) => Math.max(0, weights[i] ?? 0))
+  const { fields, motifs } = computeGeoScene(w, h, ws, seed, colors)
+
   const total = ws.reduce((a, b) => a + b, 0)
   const pct = (i: number) => (total > 0 ? Math.round((ws[i] / total) * 100) : 0)
   const memo =
@@ -159,30 +217,84 @@ export function GeoBanner({
       ? langs.map((l, i) => `${T.langChip[l]} ${pct(i)}%`).join('・')
       : 'まだ記録がありません'
 
+  const save = async (fmt: (typeof GEO_EXPORTS)[number]) => {
+    try {
+      await downloadGeoPng(fmt.w, fmt.h, geoSvgString(fmt.w, fmt.h, ws, seed, colors, memo), `language-balance-${fmt.key}.png`)
+      showToast({ message: `${fmt.label}用の画像を保存しました` })
+      setShareOpen(false)
+    } catch {
+      showToast({ message: '画像の書き出しに失敗しました' })
+    }
+  }
+
+  const banner = (
+    <div
+      ref={ref}
+      role="img"
+      aria-label={`言語別の達成バランス: ${memo}`}
+      className={`overflow-hidden rounded-2xl ${className}`}
+    >
+      <svg viewBox={`0 0 ${w} ${h}`} className="h-full w-full" role="presentation" aria-hidden>
+        {fields.map((f, i) => (
+          <path key={`f${i}`} d={f.d} fill={f.fill} />
+        ))}
+        {motifs.map((m, i) => (
+          <path
+            key={`m${i}`}
+            d={GEO_MOTIFS[m.m]}
+            transform={`translate(${m.cx} ${m.cy}) rotate(${m.rot}) scale(${m.s})`}
+            fill={m.fill}
+          />
+        ))}
+      </svg>
+    </div>
+  )
+
   return (
     <div>
-      <div
-        ref={ref}
-        role="img"
-        aria-label={`言語別の達成バランス: ${memo}`}
-        className={`overflow-hidden rounded-2xl ${className}`}
-      >
-        <svg viewBox={`0 0 ${w} ${h}`} className="h-full w-full" role="presentation" aria-hidden>
-          {fields.map((f, i) => (
-            <path key={`f${i}`} d={f.d} fill={f.fill} />
-          ))}
-          {motifs.map((m, i) => (
-            <path
-              key={`m${i}`}
-              d={GEO_MOTIFS[m.m]}
-              transform={`translate(${m.cx} ${m.cy}) rotate(${m.rot}) scale(${m.s})`}
-              fill={m.fill}
-            />
-          ))}
-        </svg>
-      </div>
+      {shareable ? (
+        <button
+          type="button"
+          onClick={() => setShareOpen(true)}
+          aria-label="言語バランスの画像を保存"
+          className="block w-full cursor-pointer text-left transition-opacity hover:opacity-90"
+        >
+          {banner}
+        </button>
+      ) : (
+        banner
+      )}
       {/* 言語別の割合のメモ書き */}
-      {caption && <p className="mt-1.5 text-[11px] leading-relaxed tracking-wide text-neutral-400">{memo}</p>}
+      {caption && (
+        <p className="mt-1.5 flex items-center gap-1.5 text-[11px] leading-relaxed tracking-wide text-neutral-400">
+          {memo}
+          {shareable && (
+            <span className="inline-flex items-center gap-0.5 text-neutral-300">
+              <Icon name="download" className="text-xs" />
+              タップで画像保存
+            </span>
+          )}
+        </p>
+      )}
+
+      {/* SNSサイズでの保存モーダル */}
+      <Modal open={shareOpen} onClose={() => setShareOpen(false)} title="画像として保存">
+        <p className="mb-3 text-sm leading-relaxed text-neutral-500">
+          いまの言語バランスの絵柄を、投稿サイズのPNG画像で保存します。
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {GEO_EXPORTS.map((fmt) => (
+            <button
+              key={fmt.key}
+              onClick={() => save(fmt)}
+              className="flex flex-col items-start gap-0.5 rounded-xl border border-neutral-200 bg-white px-3.5 py-3 text-left hover:border-brand-400 hover:bg-brand-50/40"
+            >
+              <span className="text-sm font-semibold text-neutral-800">{fmt.label}</span>
+              <span className="text-xs tabular-nums text-neutral-400">{fmt.size}px</span>
+            </button>
+          ))}
+        </div>
+      </Modal>
     </div>
   )
 }

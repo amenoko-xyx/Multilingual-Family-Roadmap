@@ -80,16 +80,19 @@ function ToastViewport() {
 function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { members } = useApp()
   const isHome = location.pathname === '/'
   const isOnboarding = location.pathname === '/onboarding'
   const pageTitle = PAGE_TITLE[location.pathname]
+  // 初回起動(メンバー0人)でオンボーディングに来た場合、戻る先がないので戻るボタンを出さない
+  const showBack = !isHome && !(isOnboarding && members.length === 0)
 
   return (
     <div className="mx-auto min-h-screen max-w-5xl">
       <header className="sticky top-0 z-40 border-b border-neutral-200/70 bg-white/85 backdrop-blur-md">
         <div className="flex items-center gap-2 px-3 py-3 sm:px-4">
           {/* 現在地の明示+明確な「戻る」手段(ニールセン: 現在地の可視化/ユーザーの主導権) */}
-          {!isHome && (
+          {showBack && (
             <button
               onClick={() => navigate('/')}
               aria-label="ホームに戻る"
@@ -100,11 +103,14 @@ function Layout() {
           )}
           {isHome ? (
             <div className="flex min-w-0 items-baseline gap-2">
-              <span className="truncate text-lg font-bold tracking-tight text-neutral-900">{T.appName}</span>
+              {/* スマホでもタイトルが途切れないよう、縮小+折り返しで全文表示する */}
+              <span className="min-w-0 text-base font-bold leading-tight tracking-tight text-neutral-900 sm:text-lg">
+                {T.appName}
+              </span>
               <span className="hidden text-xs text-neutral-400 lg:inline">{T.tagline}</span>
             </div>
           ) : (
-            <h1 className="min-w-0 truncate text-lg font-bold tracking-tight text-neutral-900">{pageTitle}</h1>
+            <h1 className="min-w-0 text-base font-bold leading-tight tracking-tight text-neutral-900 sm:text-lg">{pageTitle}</h1>
           )}
           <div className="ml-auto flex items-center gap-2">
             <MemberSwitcher />

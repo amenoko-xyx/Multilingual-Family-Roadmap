@@ -257,22 +257,9 @@ function LanguageSetupStep({ memberId, memberName, onDone }: { memberId: string;
             )
           })}
         </ul>
-        {/* レベルの解釈(読み物)。目標の設定はここでは行わない */}
-        <div className="rounded-xl bg-neutral-50 px-3.5 py-3">
-          <p className="mb-1.5 text-xs font-semibold text-neutral-500">レベル(S1〜S6)の見方</p>
-          <ul className="space-y-1 text-xs leading-relaxed text-neutral-400">
-            {STAGES.map((s) => (
-              <li key={s.idx}>
-                <span className="font-medium text-neutral-500">S{s.idx} {s.name}</span>
-                {' — '}{STAGE_DESC[s.idx]}
-                ({s.idx === 6 ? s.ageHint : `母語話者の${s.ageHint}ごろ`})
-              </li>
-            ))}
-          </ul>
-          <p className="mt-2 text-xs leading-relaxed text-neutral-400">
-            第二外国語は「設定しない」も選べます(2言語運用)。
-          </p>
-        </div>
+        <p className="rounded-xl bg-neutral-50 px-3.5 py-3 text-xs leading-relaxed text-neutral-400">
+          第二外国語は「設定しない」も選べます(2言語運用)。
+        </p>
       </Card>
 
       <div className="sticky bottom-4">
@@ -345,6 +332,19 @@ function AssessmentStep({ memberId, memberName, onDone }: { memberId: string; me
           言語ごとに「いまどのくらいか」をざっくり選ぶと、その少し下のレベルから確認を始めます。
           正確でなくて大丈夫です。<strong className="font-semibold text-neutral-600">あとからいつでも変更できます。</strong>
         </p>
+        {/* レベルの解釈(読み物)。チェックを付ける前の物差しとしてここで示す */}
+        <div className="mt-3 rounded-xl bg-neutral-50 px-3.5 py-3">
+          <p className="mb-1.5 text-xs font-semibold text-neutral-500">レベル(S1〜S6)の見方</p>
+          <ul className="space-y-1 text-xs leading-relaxed text-neutral-400">
+            {STAGES.map((s) => (
+              <li key={s.idx}>
+                <span className="font-medium text-neutral-500">S{s.idx} {s.name}</span>
+                {' — '}{STAGE_DESC[s.idx]}
+                ({s.idx === 6 ? s.ageHint : `母語話者の${s.ageHint}ごろ`})
+              </li>
+            ))}
+          </ul>
+        </div>
       </Card>
 
       {/* 言語の進行インジケーター(順番に入力。タップでの移動はできない) */}
